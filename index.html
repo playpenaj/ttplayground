@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Table Tennis Playground</title>
+<style>
+  :root{
+    --bg: #0B1622;
+    --panel: #101F30;
+    --panel-2: #16293D;
+    --panel-3: #1D3450;
+    --line: #22384F;
+    --orange: #FF7A3D;
+    --green: #34C77B;
+    --red: #E63946;
+    --gold: #F4C43A;
+    --silver: #C7D1DC;
+    --bronze: #D08A4E;
+    --text-hi: #F3F6F8;
+    --text-lo: #93A9BD;
+    --text-faint: #5D7089;
+    --radius: 16px;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; background:var(--bg); color:var(--text-hi);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+    -webkit-user-select:none; user-select:none; overscroll-behavior:none; }
+  button, input, select { font-family:inherit; }
+  #app{ min-height:100vh; min-height:100dvh; display:flex; flex-direction:column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
+  /* ---------- header ---------- */
+  header.top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 14px 18px 10px; flex-shrink:0; gap:10px; flex-wrap: wrap;
+  }
+  header.top .brand{ display:flex; align-items:center; gap:10px; }
+  header.top .brand .logo{
+    width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg,var(--orange),#ff9f6b);
+    display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
+  }
+  header.top .brand h1{ font-size:17px; margin:0; letter-spacing:.2px; line-height:1.15; }
+  header.top .brand .tag{ font-size:11px; color:var(--text-lo); font-weight:600; }
+  header.top .actions{ display:flex; gap:8px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+  .icon-btn{
+    background:var(--panel-2); border:1px solid var(--line); color:var(--text-hi);
+    border-radius:10px; padding:8px 11px; font-size:12px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; gap:5px; white-space:nowrap;
+  }
+  .icon-btn:active{ transform:scale(.96); }
+
+  /* ---------- tabs ---------- */
+  nav.tabs{
+    display:flex; gap:4px; padding: 4px 12px; overflow-x:auto; flex-shrink:0;
+    border-bottom:1px solid var(--line); scrollbar-width:none;
+  }
+  nav.tabs::-webkit-scrollbar{ display:none; }
+  nav.tabs button{
+    background:none; border:none; color:var(--text-lo); font-weight:700; font-size:13px;
+    padding:10px 14px; border-radius:10px 10px 0 0; cursor:pointer; white-space:nowrap;
+    display:flex; align-items:center; gap:6px; border-bottom:2px solid transparent;
+  }
+  nav.tabs button.active{ color:var(--text-hi); border-bottom-color:var(--orange); background:var(--panel-2); }
+
+  main{ flex:1; overflow-y:auto; padding: 14px 14px 90px; }
+  .tab-panel{ display:none; animation: fadein .25s ease; }
+  .tab-panel.active{ display:block; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  h2.section-title{ font-size:14px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-lo); margin: 4px 0 10px; font-weight:800; }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:14px; }
+
+  /* ---------- filter bar ---------- */
+  .filter-bar{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px; }
+  .filter-field{ display:flex; flex-direction:column; gap:4px; }
+  .filter-field label{ font-size:10px; color:var(--text-lo); text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+  .filter-bar input[type=month], .filter-bar select{
+    background:var(--panel-2); border:1px solid var(--line); color:var(--text-hi);
+    padding:9px 10px; border-radius:9px; font-size:13px; font-weight:600;
+  }
+  .chip-group{ display:flex; gap:6px; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:3px; }
+  .chip-group button{
+    background:none; border:none; color:var(--text-lo); font-weight:700; font-size:12px;
+    padding:7px 12px; border-radius:8px; cursor:pointer;
+  }
+  .chip-group button.active{ background:var(--orange); color:#2b1206; }
+  .reset-link{ background:none; border:none; color:var(--text-lo); font-size:12px; text-decoration:underline; cursor:pointer; padding:8px 4px; }
+
+  /* ---------- spotlight cards ---------- */
+  .spotlight-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; margin-bottom:18px; }
+  .spotlight{
+    position:relative; border-radius:18px; padding:18px; overflow:hidden;
+    border:1px solid var(--line); background:var(--panel);
+  }
+  .spotlight.month{ background:linear-gradient(155deg, rgba(255,122,61,.16), var(--panel) 60%); border-color:rgba(255,122,61,.4); }
+  .spotlight.overall{ background:linear-gradient(155deg, rgba(244,196,58,.18), var(--panel) 60%); border-color:rgba(244,196,58,.45); }
+  .spotlight.active-player{ background:linear-gradient(155deg, rgba(52,199,123,.16), var(--panel) 60%); border-color:rgba(52,199,123,.4); }
+  .spotlight .label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-lo); font-weight:800; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+  .spotlight .icon{ font-size:22px; display:inline-block; animation: trophy-pulse 2.2s ease-in-out infinite; }
+  @keyframes trophy-pulse{ 0%,100%{ transform:scale(1) rotate(0deg);} 50%{ transform:scale(1.15) rotate(-6deg);} }
+  .spotlight .pname{ font-size:20px; font-weight:800; margin-bottom:2px; }
+  .spotlight .pcenter{ font-size:12px; color:var(--text-lo); margin-bottom:10px; }
+  .spotlight .pstat{ font-size:13px; font-weight:700; color:var(--text-hi); }
+  .spotlight .pstat b{ font-size:22px; margin-right:4px; }
+  .spotlight .empty{ color:var(--text-faint); font-size:13px; padding: 14px 0; }
+
+  /* ---------- leaderboard tables ---------- */
+  .leaderboard-wrap{ overflow-x:auto; }
+  table.lb{ width:100%; border-collapse:separate; border-spacing:0 6px; font-size:13px; min-width:480px; }
+  table.lb th{ text-align:left; color:var(--text-lo); font-size:10px; text-transform:uppercase; letter-spacing:.05em; font-weight:800; padding:0 10px 4px; }
+  table.lb th.num, table.lb td.num{ text-align:center; }
+  table.lb tr.row{ background:var(--panel-2); }
+  table.lb td{ padding:10px; }
+  table.lb tr.row td:first-child{ border-radius:10px 0 0 10px; }
+  table.lb tr.row td:last-child{ border-radius:0 10px 10px 0; }
+  table.lb tr.rank-1{ background:linear-gradient(90deg, rgba(244,196,58,.22), var(--panel-2)); }
+  table.lb tr.rank-2{ background:linear-gradient(90deg, rgba(199,209,220,.16), var(--panel-2)); }
+  table.lb tr.rank-3{ background:linear-gradient(90deg, rgba(208,138,78,.18), var(--panel-2)); }
+  .rank-badge{ font-weight:800; font-size:13px; }
+  .player-cell{ display:flex; align-items:center; gap:8px; }
+  .avatar{ width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#0b1622; flex-shrink:0; }
+  .player-meta .pname{ font-weight:700; font-size:13px; }
+  .player-meta .pcenter{ font-size:10px; color:var(--text-lo); }
+  .pts-val{ font-weight:800; color:var(--orange); }
+  .empty-hint{ color:var(--text-faint); font-size:13px; text-align:center; padding:18px 0; }
+
+  /* ---------- forms ---------- */
+  .form-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; }
+  .form-field{ display:flex; flex-direction:column; gap:5px; }
+  .form-field label{ font-size:11px; color:var(--text-lo); font-weight:700; letter-spacing:.03em; }
+  .form-field input, .form-field select, .form-field textarea{
+    background:var(--panel-2); border:1px solid var(--line); color:var(--text-hi);
+    padding:10px 11px; border-radius:9px; font-size:14px; font-family:inherit;
+  }
+  .form-field textarea{ resize:vertical; min-height:44px; }
+  .form-field input::placeholder, .form-field textarea::placeholder{ color:var(--text-faint); }
+  .btn{ border:none; border-radius:10px; padding:11px 18px; font-weight:800; font-size:14px; cursor:pointer; }
+  .btn-primary{ background:var(--orange); color:#2b1206; }
+  .btn-primary:active{ transform:scale(.97); }
+  .btn-outline{ background:none; border:1px solid var(--line); color:var(--text-hi); }
+  .btn-danger{ background:none; border:1px solid rgba(230,57,70,.5); color:var(--red); }
+  .btn-row{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+
+  /* ---------- players list ---------- */
+  .player-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
+  .player-item{ background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:12px; display:flex; align-items:center; gap:10px; }
+  .player-item .avatar{ width:38px; height:38px; font-size:14px; }
+  .player-item .info{ flex:1; min-width:0; }
+  .player-item .info .pname{ font-weight:800; font-size:14px; }
+  .player-item .info .pcenter{ font-size:11px; color:var(--text-lo); }
+  .player-item .del{ background:none; border:none; color:var(--text-faint); font-size:16px; cursor:pointer; padding:4px; flex-shrink:0; }
+  .player-item .del:active{ color:var(--red); }
+
+  /* ---------- match form toggles ---------- */
+  .segmented{ display:flex; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:3px; }
+  .segmented button{ flex:1; background:none; border:none; color:var(--text-lo); font-weight:700; font-size:13px; padding:9px 0; border-radius:8px; cursor:pointer; }
+  .segmented button.active{ background:var(--orange); color:#2b1206; }
+  .doubles-fields{ display:none; }
+  .doubles-fields.show{ display:grid; }
+  .team-block{ background:var(--panel-3); border-radius:10px; padding:10px; }
+  .team-block .team-label{ font-size:11px; font-weight:800; color:var(--text-lo); margin-bottom:8px; text-transform:uppercase; letter-spacing:.04em; }
+  .winner-options{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+  .winner-opt{ background:var(--panel-2); border:2px solid var(--line); border-radius:10px; padding:12px; cursor:pointer; text-align:center; }
+  .winner-opt.checked{ border-color:var(--green); background:rgba(52,199,123,.12); }
+  .winner-opt .wlabel{ font-size:11px; color:var(--text-lo); font-weight:700; margin-bottom:4px; }
+  .winner-opt .wname{ font-size:13px; font-weight:800; }
+
+  /* ---------- match history ---------- */
+  .match-item{ background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:10px; }
+  .match-item .mtop{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .tag{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:4px 8px; border-radius:20px; }
+  .tag.singles{ background:rgba(52,199,123,.16); color:var(--green); }
+  .tag.doubles{ background:rgba(255,122,61,.16); color:var(--orange); }
+  .tag.tournament{ background:rgba(244,196,58,.18); color:var(--gold); }
+  .tag.monthly{ background:rgba(147,169,189,.14); color:var(--text-lo); }
+  .match-item .mdate{ font-size:11px; color:var(--text-faint); }
+  .match-item .mteams{ display:flex; align-items:center; justify-content:center; gap:10px; font-size:13px; font-weight:700; margin:6px 0; }
+  .match-item .side{ flex:1; text-align:center; padding:8px; border-radius:8px; }
+  .match-item .side.win{ color:var(--green); }
+  .match-item .side.lose{ color:var(--red); opacity:.8; }
+  .match-item .vs{ color:var(--text-faint); font-size:11px; font-weight:800; }
+  .match-item .mfoot{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+  .match-item .mloc{ font-size:11px; color:var(--text-lo); }
+  .match-item .mdel{ background:none; border:none; color:var(--text-faint); font-size:12px; cursor:pointer; text-decoration:underline; }
+
+  /* ---------- rewards ---------- */
+  table.tiers{ width:100%; border-collapse:separate; border-spacing:0 6px; font-size:13px; }
+  table.tiers td{ padding:10px; background:var(--panel-2); }
+  table.tiers tr td:first-child{ border-radius:10px 0 0 10px; font-weight:800; }
+  table.tiers tr td:last-child{ border-radius:0 10px 10px 0; text-align:right; font-weight:800; color:var(--orange); }
+  .tier-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; }
+
+  .progress-track{ height:8px; background:var(--panel-3); border-radius:6px; overflow:hidden; margin-top:6px; }
+  .progress-fill{ height:100%; background:linear-gradient(90deg,var(--orange),var(--gold)); border-radius:6px; transition:width .4s ease; }
+
+  /* ---------- info tab ---------- */
+  .info-item{ display:flex; gap:12px; margin-bottom:14px; }
+  .info-item .ic{ width:40px; height:40px; border-radius:10px; background:var(--panel-2); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .info-item .txt h3{ margin:0 0 4px; font-size:14px; }
+  .info-item .txt p{ margin:0; font-size:13px; color:var(--text-lo); line-height:1.5; }
+  .price-tag{ display:inline-block; background:var(--panel-3); color:var(--orange); font-weight:800; padding:4px 10px; border-radius:20px; font-size:13px; margin-top:4px; }
+
+  /* ---------- toast & modal ---------- */
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(10px);
+    background:var(--panel-3); border:1px solid var(--green); color:var(--text-hi);
+    padding:14px 20px; border-radius:14px; font-size:13px; font-weight:700; z-index:70;
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+    max-width:90vw; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast .tt-icon{ font-size:20px; display:block; margin-bottom:4px; animation: trophy-pulse 1s ease-in-out 2; }
+
+  #confettiCanvas{ position:fixed; inset:0; pointer-events:none; z-index:65; }
+
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:80; padding:20px; }
+  .modal-backdrop.open{ display:flex; }
+  .modal{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; max-width:400px; width:100%; max-height:82vh; overflow-y:auto; }
+  .modal h2{ margin:0 0 4px; font-size:18px; }
+  .modal p.sub{ color:var(--text-lo); font-size:13px; margin:2px 0 14px; }
+  .modal .opt-btn{ display:flex; align-items:center; justify-content:space-between; width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text-hi); padding:12px 14px; border-radius:10px; margin-bottom:8px; cursor:pointer; font-size:14px; font-weight:700; }
+  .modal .close-btn{ margin-top:6px; width:100%; padding:10px; background:none; border:1px solid var(--line); color:var(--text-lo); border-radius:10px; cursor:pointer; }
+
+  @media (min-width:720px){
+    main{ max-width:960px; margin:0 auto; width:100%; }
+    header.top{ max-width:960px; margin:0 auto; width:100%; }
+    nav.tabs{ max-width:960px; margin:0 auto; width:100%; justify-content:flex-start; }
+  }
+
+  /* ---------- pin / lock ---------- */
+  .lock-btn.unlocked{ background: rgba(52,199,123,.16); border-color: var(--green); color: var(--green); }
+  .lock-btn.locked{ background: rgba(230,57,70,.12); border-color: rgba(230,57,70,.4); color: var(--red); }
+  .lock-countdown{
+    font-size:11px; font-weight:800; color: var(--green); background: rgba(52,199,123,.12);
+    border: 1px solid var(--green); padding: 7px 10px; border-radius: 20px; white-space: nowrap;
+    display: flex; align-items: center; gap: 4px; animation: countdown-pulse 2s ease-in-out infinite;
+  }
+  @keyframes countdown-pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.65; } }
+
+  .pin-dots{ display:flex; gap:10px; justify-content:center; margin: 14px 0; }
+  .pin-input-wrap input{
+    width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text-hi);
+    padding:14px; border-radius:10px; font-size:22px; text-align:center; letter-spacing:.3em;
+    font-weight:800;
+  }
+  .pin-error{ color: var(--red); font-size:12px; text-align:center; margin-top:8px; display:none; font-weight:700; }
+  .pin-hint{ color: var(--text-faint); font-size:11px; text-align:center; margin-top:10px; }
+
+  /* ---------- match field grid (winner/runner-up/session/location/date) ---------- */
+  .match-fields{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; margin:10px 0; }
+  .mf-item{ background:var(--panel-3); border-radius:8px; padding:8px 10px; }
+  .mf-item.full-width{ grid-column: 1 / -1; }
+  .mf-label{ display:block; font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-lo); font-weight:800; margin-bottom:3px; }
+  .mf-val{ font-size:13px; font-weight:700; color:var(--text-hi); }
+  .mf-val.win{ color: var(--green); }
+  .mf-val.lose{ color: var(--red); }
+  .mf-val.comment{ font-weight:500; color: var(--text-lo); font-style:italic; white-space:pre-wrap; }
+
+  /* ---------- cap warning ---------- */
+  .cap-note{ font-size:11px; color: var(--text-faint); margin-top:6px; }
+
+  /* ---------- subscription badges ---------- */
+  .status-badge{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:3px 9px; border-radius:20px; display:inline-block; }
+  .status-badge.paid{ background: rgba(52,199,123,.16); color: var(--green); }
+  .status-badge.unpaid{ background: rgba(230,57,70,.14); color: var(--red); }
+  .player-item .pcenter-row{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+
+  table.sub-table{ width:100%; border-collapse:separate; border-spacing:0 6px; font-size:13px; }
+  table.sub-table th{ text-align:left; color:var(--text-lo); font-size:10px; text-transform:uppercase; letter-spacing:.05em; font-weight:800; padding:0 10px 4px; }
+  table.sub-table td{ padding:10px; background:var(--panel-2); }
+  table.sub-table tr td:first-child{ border-radius:10px 0 0 10px; }
+  table.sub-table tr td:last-child{ border-radius:0 10px 10px 0; }
+  .mini-btn{ background:var(--panel-3); border:1px solid var(--line); color:var(--text-hi); border-radius:8px; padding:6px 10px; font-size:11px; font-weight:700; cursor:pointer; margin-right:4px; }
+  .mini-btn.mark{ background: rgba(52,199,123,.16); border-color: var(--green); color: var(--green); }
+  .mini-btn.danger{ background: rgba(230,57,70,.1); border-color: rgba(230,57,70,.4); color: var(--red); }
+  .mini-btn.edit{ background: rgba(78,168,255,.14); border-color: rgba(78,168,255,.4); color: #4EA8FF; }
+
+  .edit-btn{ background:none; border:none; color:var(--text-faint); font-size:14px; cursor:pointer; padding:4px; }
+  .edit-btn:active{ color: var(--orange); }
+
+  .file-input-hidden{ display:none; }
+  .data-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  /* ---------- cloud sync ---------- */
+  .sync-status{ font-size:12px; padding:10px 12px; border-radius:10px; margin-top:10px; font-weight:700; }
+  .sync-status.ok{ background: rgba(52,199,123,.12); color: var(--green); border:1px solid var(--green); }
+  .sync-status.err{ background: rgba(230,57,70,.1); color: var(--red); border:1px solid rgba(230,57,70,.4); }
+  .sync-status.idle{ background: var(--panel-2); color: var(--text-lo); border:1px solid var(--line); }
+  .sync-toggle-row{ display:flex; align-items:center; gap:8px; margin-top:10px; font-size:13px; color:var(--text-hi); }
+  .sync-toggle-row input[type=checkbox]{ width:18px; height:18px; accent-color: var(--orange); }
+
+  .cap-warning{ font-size:11px; color:var(--orange); margin-top:4px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="top">
+    <div class="brand">
+      <div class="logo">🏓</div>
+      <div>
+        <h1>Table Tennis Playground</h1>
+        <div class="tag">Community league &middot; points &middot; rewards</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="icon-btn lock-btn locked" id="lockBtn" type="button">🔒 Admin</button>
+      <span class="lock-countdown" id="lockCountdown" style="display:none;"></span>
+      <button class="icon-btn" id="infoBtn" type="button">ℹ️ Info</button>
+      <button class="icon-btn" id="fullscreenBtn" type="button">⛶</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="dashboard" type="button">📊 Dashboard</button>
+    <button class="tab-btn" data-tab="players" type="button">👥 Players</button>
+    <button class="tab-btn" data-tab="matches" type="button">🏓 Matches</button>
+    <button class="tab-btn" data-tab="rewards" type="button">🎁 Rewards</button>
+    <button class="tab-btn" data-tab="admin" type="button">⚙️ Admin</button>
+    <button class="tab-btn" data-tab="info" type="button">📖 Info</button>
+  </nav>
+
+  <main>
+
+    <!-- ================= DASHBOARD ================= -->
+    <section class="tab-panel active" id="tab-dashboard">
+
+      <div class="filter-bar">
+        <div class="filter-field">
+          <label>Viewing month</label>
+          <input type="month" id="dashMonth">
+        </div>
+        <div class="filter-field">
+          <label>Most active — scope</label>
+          <div class="chip-group" id="activeScopeChips">
+            <button data-scope="month" class="active" type="button">This month</button>
+            <button data-scope="all" type="button">All time</button>
+          </div>
+        </div>
+        <div class="filter-field" style="flex:1; min-width:180px;">
+          <label>Search player</label>
+          <input type="text" id="dashSearch" placeholder="Type a player name…" maxlength="40">
+        </div>
+        <button class="reset-link" id="resetFilters" type="button">Reset filters</button>
+      </div>
+
+      <h2 class="section-title">🏅 Top Point Holders</h2>
+      <div class="card">
+        <div class="leaderboard-wrap" id="lbOverall"></div>
+      </div>
+
+      <div class="spotlight-row">
+        <div class="spotlight month">
+          <div class="label"><span class="icon">🏆</span> Player of the Month</div>
+          <div id="spotlightMonth"><div class="empty">No matches recorded this month yet</div></div>
+        </div>
+        <div class="spotlight overall">
+          <div class="label"><span class="icon">👑</span> Overall Champion</div>
+          <div id="spotlightOverall"><div class="empty">No matches recorded yet</div></div>
+        </div>
+        <div class="spotlight active-player">
+          <div class="label"><span class="icon">🔥</span> Most Active Player</div>
+          <div id="spotlightActive"><div class="empty">No matches recorded yet</div></div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Singles Leaderboard</h2>
+      <div class="card">
+        <div class="leaderboard-wrap" id="lbSingles"></div>
+      </div>
+
+      <h2 class="section-title">Doubles Leaderboard</h2>
+      <div class="card">
+        <div class="leaderboard-wrap" id="lbDoubles"></div>
+      </div>
+
+    </section>
+
+    <!-- ================= PLAYERS ================= -->
+    <section class="tab-panel" id="tab-players">
+      <h2 class="section-title">Add a player</h2>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Player name</label>
+            <input type="text" id="newPlayerName" placeholder="e.g. Alex Tan" maxlength="40">
+          </div>
+          <div class="form-field">
+            <label>Community center</label>
+            <select id="newPlayerCenter">
+              <option value="">Select community center</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="addPlayerBtn" type="button">+ Add player</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">Roster</h2>
+      <div class="card">
+        <div class="player-list" id="playerList"></div>
+      </div>
+    </section>
+
+    <!-- ================= MATCHES ================= -->
+    <section class="tab-panel" id="tab-matches">
+      <h2 class="section-title">Record a match result</h2>
+      <div class="card">
+        <p class="cap-note" id="matchEligibilityNote" style="margin-bottom:10px;"></p>
+
+        <div class="form-field" style="margin-bottom:12px;">
+          <label>Match type</label>
+          <div class="segmented" id="matchTypeSeg">
+            <button data-type="singles" class="active" type="button">Singles</button>
+            <button data-type="doubles" type="button">Doubles</button>
+          </div>
+        </div>
+
+        <div class="form-grid" id="singlesFields">
+          <div class="form-field">
+            <label>Player A</label>
+            <select id="singlesA"><option value="">Select player</option></select>
+          </div>
+          <div class="form-field">
+            <label>Player B</label>
+            <select id="singlesB"><option value="">Select player</option></select>
+          </div>
+        </div>
+
+        <div class="doubles-fields form-grid" id="doublesFields" style="grid-template-columns:1fr 1fr; margin-top:10px;">
+          <div class="team-block">
+            <div class="team-label">Team A</div>
+            <div class="form-field" style="margin-bottom:8px;">
+              <select id="doublesA1"><option value="">Select player</option></select>
+            </div>
+            <div class="form-field">
+              <select id="doublesA2"><option value="">Select player</option></select>
+            </div>
+          </div>
+          <div class="team-block">
+            <div class="team-label">Team B</div>
+            <div class="form-field" style="margin-bottom:8px;">
+              <select id="doublesB1"><option value="">Select player</option></select>
+            </div>
+            <div class="form-field">
+              <select id="doublesB2"><option value="">Select player</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:12px;">
+          <div class="form-field">
+            <label>Session type</label>
+            <select id="sessionType">
+              <option value="Monthly Session">Monthly Session</option>
+              <option value="Tournament">Tournament</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Location (community center)</label>
+            <select id="sessionLocation"><option value="">Select community center</option></select>
+          </div>
+          <div class="form-field">
+            <label>Date</label>
+            <input type="date" id="matchDate">
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-top:12px;">
+          <label>Winner</label>
+          <div class="winner-options" id="winnerOptions">
+            <div class="winner-opt" data-side="A"><div class="wlabel">Side A</div><div class="wname">Select players</div></div>
+            <div class="winner-opt" data-side="B"><div class="wlabel">Side B</div><div class="wname">Select players</div></div>
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-top:12px;">
+          <label>Comments (optional)</label>
+          <textarea id="matchComments" rows="2" maxlength="300" placeholder="Any additional information about this match…"></textarea>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="submitMatchBtn" type="button">Save match result</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">Match history</h2>
+      <div class="card">
+        <div id="matchHistory"><div class="empty-hint">No matches recorded yet</div></div>
+      </div>
+    </section>
+
+    <!-- ================= REWARDS ================= -->
+    <section class="tab-panel" id="tab-rewards">
+      <h2 class="section-title">Points → discount tiers</h2>
+      <div class="card">
+        <table class="tiers" id="tierTable"></table>
+      </div>
+
+      <h2 class="section-title">Player rewards standing</h2>
+      <div class="card">
+        <div id="rewardsList"><div class="empty-hint">No players yet</div></div>
+      </div>
+    </section>
+
+    <!-- ================= ADMIN ================= -->
+    <section class="tab-panel" id="tab-admin">
+      <h2 class="section-title">This month's subscription status</h2>
+      <div class="card">
+        <div id="subStatusList"><div class="empty-hint">No players yet</div></div>
+      </div>
+
+      <h2 class="section-title">Record / update a payment</h2>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Player</label>
+            <select id="subPlayer"><option value="">Select player</option></select>
+          </div>
+          <div class="form-field">
+            <label>Month</label>
+            <input type="month" id="subMonth">
+          </div>
+          <div class="form-field">
+            <label>Amount ($)</label>
+            <input type="number" id="subAmount" value="2" min="0" step="0.5">
+          </div>
+          <div class="form-field">
+            <label>Paid date</label>
+            <input type="date" id="subPaidDate">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="subSaveBtn" type="button">Save payment</button>
+          <button class="btn btn-outline" id="subFormReset" type="button" style="display:none;">Cancel edit</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">Payment history</h2>
+      <div class="card">
+        <div class="leaderboard-wrap" id="subHistory"><div class="empty-hint">No payments recorded yet</div></div>
+      </div>
+
+      <h2 class="section-title">Data management</h2>
+      <div class="card">
+        <p style="color:var(--text-lo); font-size:13px; margin-top:0;">Every action below requires the admin PIN. Full backup covers everything at once; the individual buttons let you export or restore just one kind of record.</p>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-weight:800; font-size:13px; margin-bottom:6px;">Full backup (players + matches + payments)</div>
+          <div class="data-actions">
+            <button class="btn btn-primary" id="exportBtn" type="button">⇩ Export all data</button>
+            <button class="btn btn-outline" id="importBtn" type="button">⇧ Import all data</button>
+            <input type="file" id="importFile" class="file-input-hidden" accept="application/json">
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-weight:800; font-size:13px; margin-bottom:6px;">Players only</div>
+          <div class="data-actions">
+            <button class="btn btn-outline" id="exportPlayersBtn" type="button">⇩ Export players</button>
+            <button class="btn btn-outline" id="importPlayersBtn" type="button">⇧ Import players</button>
+            <input type="file" id="importPlayersFile" class="file-input-hidden" accept="application/json">
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-weight:800; font-size:13px; margin-bottom:6px;">Matches only</div>
+          <div class="data-actions">
+            <button class="btn btn-outline" id="exportMatchesBtn" type="button">⇩ Export matches</button>
+            <button class="btn btn-outline" id="importMatchesBtn" type="button">⇧ Import matches</button>
+            <input type="file" id="importMatchesFile" class="file-input-hidden" accept="application/json">
+          </div>
+        </div>
+
+        <div>
+          <div style="font-weight:800; font-size:13px; margin-bottom:6px;">Subscriptions only</div>
+          <div class="data-actions">
+            <button class="btn btn-outline" id="exportSubsBtn" type="button">⇩ Export payments</button>
+            <button class="btn btn-outline" id="importSubsBtn" type="button">⇧ Import payments</button>
+            <input type="file" id="importSubsFile" class="file-input-hidden" accept="application/json">
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">☁️ Cloud Sync (Google Sheet)</h2>
+      <div class="card">
+        <p style="color:var(--text-lo); font-size:13px; margin-top:0;">
+          Connect this app to a Google Sheet (via a small Apps Script you deploy once) so all data
+          survives even when this page is hosted as a static file, e.g. on GitHub Pages. The Web App
+          URL and secret token you enter below are saved only in <b>this browser's</b> local storage —
+          they are never written into the HTML file, so they stay out of your public repository.
+        </p>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Apps Script Web App URL</label>
+            <input type="text" id="syncUrl" placeholder="https://script.google.com/macros/s/…/exec">
+          </div>
+          <div class="form-field">
+            <label>Secret token</label>
+            <input type="password" id="syncToken" placeholder="Matches SECRET_TOKEN in the script">
+          </div>
+        </div>
+        <div class="sync-toggle-row">
+          <input type="checkbox" id="syncAutoToggle">
+          <label for="syncAutoToggle">Auto-sync to the Sheet a few seconds after any change</label>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="syncSaveBtn" type="button">Save settings</button>
+          <button class="btn btn-outline" id="syncTestBtn" type="button">Test connection</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-outline" id="syncPushBtn" type="button">⇧ Sync to Sheet</button>
+          <button class="btn btn-outline" id="syncPullBtn" type="button">⇩ Load from Sheet</button>
+        </div>
+        <div class="sync-status idle" id="syncStatus">Not connected — paste your Web App URL and token above, then Save settings.</div>
+      </div>
+    </section>
+
+        <!-- ================= INFO ================= -->
+    <section class="tab-panel" id="tab-info">
+      <h2 class="section-title">How it works</h2>
+      <div class="card">
+        <div class="info-item">
+          <div class="ic">📝</div>
+          <div class="txt">
+            <h3>Registration</h3>
+            <p>To register for the league, contact the administrator directly — new players are added by an admin, not through self sign-up.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="ic">💳</div>
+          <div class="txt">
+            <h3>Subscription</h3>
+            <p>Each registered player pays a monthly subscription fee to stay active in the league. Players whose subscription for the current month hasn't been recorded as paid will not appear in the player selectors when recording a match, and can't be added to a match until payment is logged in the Admin tab.</p>
+            <span class="price-tag">$2 / month</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="ic">💾</div>
+          <div class="txt">
+            <h3>Data backup</h3>
+            <p>The administrator can export a full backup of all players, matches, and payment records as a file, and restore from one, from the Admin tab. Both actions require the PIN.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="ic">☁️</div>
+          <div class="txt">
+            <h3>Cloud sync</h3>
+            <p>When a Google Sheet is connected in the Admin tab, all data can be pushed to or pulled from that Sheet, so it persists even when this page is hosted as a static file (for example on GitHub Pages) rather than kept only in one browser's storage.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="ic">🏓</div>
+          <div class="txt">
+            <h3>Monthly Session points</h3>
+            <p><b>Singles:</b> winner earns 5 points, runner-up earns 3 points.<br>
+               <b>Doubles:</b> each winning player earns 2.5 points, each losing player earns 1 point.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="ic">🏆</div>
+          <div class="txt">
+            <h3>Tournament points</h3>
+            <p>Tournament matches (singles or doubles) award the winner(s) <b>1 point</b> and the runner-up(s) <b>0 points</b>.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="ic">⏱️</div>
+          <div class="txt">
+            <h3>Match limits</h3>
+            <p>A player may take part in at most <b>3 Monthly Session matches within any rolling 24-hour period</b>. Tournament matches have no such limit.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="ic">🔒</div>
+          <div class="txt">
+            <h3>Admin actions</h3>
+            <p>Adding, editing, or removing players and matches, managing subscriptions, and exporting/importing data all require the administrator PIN. Once entered correctly, admin access stays unlocked for <b>5 minutes</b> before the PIN is required again. Entering the wrong PIN <b>5 times</b> locks admin access for <b>30 minutes</b>.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="ic">🎁</div>
+          <div class="txt">
+            <h3>Store rewards</h3>
+            <p>The more points you accumulate, the bigger your discount on table tennis accessories in the store. Check the Rewards tab for current tiers.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+<div class="toast" id="toast"></div>
+
+<div class="modal-backdrop" id="editPlayerModal">
+  <div class="modal">
+    <h2>Edit player</h2>
+    <p class="sub">Update name or community center.</p>
+    <div class="form-field" style="margin-bottom:10px;">
+      <label>Player name</label>
+      <input type="text" id="editPlayerName" maxlength="40">
+    </div>
+    <div class="form-field">
+      <label>Community center</label>
+      <select id="editPlayerCenter"></select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="editPlayerSave" type="button" style="flex:1;">Save changes</button>
+    </div>
+    <button class="close-btn" id="editPlayerCancel" type="button">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="editMatchModal">
+  <div class="modal">
+    <h2>Edit match</h2>
+    <p class="sub">Update the session details or flip the winner. Player line-ups can't be changed here — delete and re-record if the players were wrong.</p>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Session type</label>
+        <select id="editMatchSessionType">
+          <option value="Monthly Session">Monthly Session</option>
+          <option value="Tournament">Tournament</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Location (community center)</label>
+        <select id="editMatchLocation"><option value="">Select community center</option></select>
+      </div>
+      <div class="form-field">
+        <label>Date</label>
+        <input type="date" id="editMatchDate">
+      </div>
+    </div>
+    <div class="form-field" style="margin-top:12px;">
+      <label>Winner</label>
+      <div class="winner-options" id="editWinnerOptions">
+        <div class="winner-opt" data-side="A"><div class="wlabel">Side A</div><div class="wname"></div></div>
+        <div class="winner-opt" data-side="B"><div class="wlabel">Side B</div><div class="wname"></div></div>
+      </div>
+    </div>
+    <div class="form-field" style="margin-top:12px;">
+      <label>Comments (optional)</label>
+      <textarea id="editMatchComments" rows="2" maxlength="300" placeholder="Any additional information about this match…"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="editMatchSave" type="button" style="flex:1;">Save changes</button>
+    </div>
+    <button class="close-btn" id="editMatchCancel" type="button">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="pinModal">
+  <div class="modal">
+    <h2>Admin PIN required</h2>
+    <p class="sub">Enter the administrator PIN to add players, remove players, or save match results.</p>
+    <div class="pin-input-wrap">
+      <input type="password" inputmode="numeric" pattern="[0-9]*" id="pinInput" maxlength="12" placeholder="Enter PIN" autocomplete="off">
+    </div>
+    <div class="pin-error" id="pinError">Incorrect PIN. Try again.</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="pinSubmit" type="button" style="flex:1;">Unlock</button>
+    </div>
+    <button class="close-btn" id="pinCancel" type="button">Cancel</button>
+    <div class="pin-hint">Unlocks admin actions for 5 minutes. 5 wrong attempts locks the PIN for 30 minutes. The PIN is checked against a one-way hash — the code never contains the PIN itself.</div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="infoModal">
+  <div class="modal">
+    <h2>Table Tennis Playground</h2>
+    <p class="sub">Quick facts</p>
+    <div class="info-item">
+      <div class="ic">📝</div>
+      <div class="txt"><h3>Registration</h3><p>Contact the administrator to register.</p></div>
+    </div>
+    <div class="info-item">
+      <div class="ic">💳</div>
+      <div class="txt"><h3>Subscription</h3><p>$2 per month per player.</p></div>
+    </div>
+    <div class="info-item">
+      <div class="ic">🏓</div>
+      <div class="txt"><h3>Monthly Session points</h3><p>Singles 5/3 &middot; Doubles 2.5/1 (win/runner-up)</p></div>
+    </div>
+    <div class="info-item">
+      <div class="ic">🏆</div>
+      <div class="txt"><h3>Tournament points</h3><p>Winner 1 &middot; Runner-up 0 &middot; unlimited entries</p></div>
+    </div>
+    <div class="info-item">
+      <div class="ic">⏱️</div>
+      <div class="txt"><h3>Match limit</h3><p>Max 3 Monthly Session matches per player / 24 hrs</p></div>
+    </div>
+    <button class="close-btn" id="closeInfoModal" type="button">Close</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ================= Singapore community centers ================= */
+var SG_COMMUNITY_CENTERS = [
+  "ACE The Place Our Community Club @ Admiralty","Aljunied Community Centre","Anchorvale Community Club",
+  "Ang Mo Kio Community Centre","Ayer Rajah Community Centre","Bedok Community Centre","Bidadari Community Club",
+  "Bishan Community Club","Bishan North Community Centre","Boon Lay Community Centre",
+  "Braddell Heights Community Club","Buangkok Community Club",
+  "Bukit Batok Community Club","Bukit Batok East Community Club","Bukit Merah Community Centre",
+  "Bukit Panjang Community Club","Bukit Timah Community Club","Buona Vista Community Club",
+  "Cairnhill Community Club","Canberra Community Club","Changi Simei Community Club","Cheng San Community Club",
+  "Chong Pang Community Club","Chua Chu Kang Community Club","Ci Yuan Community Club","Clementi Community Centre",
+  "Dover Community Centre","Eunos Community Club","Fengshan Community Club","Fernvale Community Club",
+  "Fuchun Community Club",
+  "Gek Poh Ville Community Club","Geylang Serai Community Club","Geylang West Community Club",
+  "Henderson Community Club","Hillview Community Club","Hong Kah North Community Club","Hougang Community Club",
+  "Hwi Yoh Community Centre","Jalan Besar Community Club","Joo Chiat Community Club","Jurong Green Community Club",
+  "Jurong Spring Community Club","Kaki Bukit Community Centre","Kallang Community Club",
+  "Kampong Chai Chee Community Club","Kampong Glam Community Club","Kampong Kembangan Community Club",
+  "Kampong Ubi Community Centre","Katong Community Centre","Keat Hong Community Club","Kebun Bahru Community Club",
+  "Kim Seng Community Centre","Kolam Ayer Community Club","Kreta Ayer Community Club","Leng Kee Community Centre",
+  "MacPherson Community Club","Marine Parade Community Club","Marsiling Community Club",
+  "Mountbatten Community Club","Nanyang Community Club","Nee Soon Central Community Club",
+  "Nee Soon East Community Club","Nee Soon Link Community Centre","Nee Soon South Community Club",
+  "Pasir Ris East Community Club","Pasir Ris Elias Community Club","Paya Lebar Kovan Community Club",
+  "Pek Kio Community Centre","Potong Pasir Community Club","Punggol Community Club",
+  "Punggol Park Community Centre","Queenstown Community Centre","Radin Mas Community Club",
+  "Rivervale Community Centre","Sembawang Community Club","Sengkang Community Club",
+  "Senja-Cashew Community Centre","Siglap Community Centre","Siglap South Community Centre",
+  "Taman Jurong Community Club","Tampines Central Community Club","Tampines Changkat Community Club",
+  "Tampines East Community Club","Tampines North Community Club","Tampines West Community Club",
+  "Tanglin Community Club","Tanjong Pagar Community Club","Teck Ghee Community Club",
+  "Telok Ayer Hong Lim Green Community Centre","Telok Blangah Community Club","The Frontier Community Club",
+  "The Serangoon Community Club","Thomson Community Club","Tiong Bahru Community Centre",
+  "Toa Payoh Central Community Club","Toa Payoh East Community Club","Toa Payoh South Community Club",
+  "Toa Payoh West Community Club","Ulu Pandan Community Club","West Coast Community Centre",
+  "Whampoa Community Club","Woodgrove Community Centre","Woodlands Community Club",
+  "Woodlands Galaxy Community Club","Yew Tee Community Club","Yio Chu Kang Community Club",
+  "Yuhua Community Club","Zhenghua Community Club"
+];
+
+/* ================= constants ================= */
+var STORAGE_KEY = 'ttPlayground_v2';
+// One-way SHA-256 hash of the admin PIN. The PIN itself never appears in this file —
+// entered PINs are hashed client-side and compared to this value.
+var PIN_HASH = 'dc214d334b277cb2bb7d4254225ef5cd0a5aa997032a0b27de939fe8001514a2';
+var POINTS = { singlesWin: 5, singlesLose: 3, doublesWin: 2.5, doublesLose: 1, tourneyWin: 1, tourneyLose: 0 };
+var MONTHLY_SESSION_CAP = 3;
+var MONTHLY_SESSION_WINDOW_MS = 24 * 60 * 60 * 1000;
+var TIERS = [
+  { name: 'Member',   min: 0,   discount: 0,  color: '#5D7089' },
+  { name: 'Bronze',   min: 25,  discount: 5,  color: '#D08A4E' },
+  { name: 'Silver',   min: 75,  discount: 10, color: '#C7D1DC' },
+  { name: 'Gold',     min: 150, discount: 15, color: '#F4C43A' },
+  { name: 'Platinum', min: 300, discount: 20, color: '#7FE7C4' }
+];
+var AVATAR_COLORS = ['#FF7A3D','#34C77B','#4EA8FF','#F4C43A','#E63946','#B084F5','#4FD1C5','#F58CBA'];
+
+var state = { players: [], matches: [], subscriptions: [] };
+var els = {};
+var activeScope = 'month';
+var currentTab = 'dashboard';
+var matchType = 'singles';
+var winnerSide = null;
+var unlocked = false;
+var unlockedAt = 0;
+var pendingPinAction = null;
+var autoLockTimer = null;
+
+var SECURITY_KEY = 'ttPlayground_security_v1';
+var UNLOCK_DURATION_MS = 5 * 60 * 1000;   // admin session stays unlocked for 5 minutes
+var MAX_PIN_ATTEMPTS = 5;                  // wrong tries allowed before lockout
+var LOCKOUT_DURATION_MS = 30 * 60 * 1000; // lockout length after too many wrong tries
+
+function loadSecurity(){
+  try{
+    var raw = localStorage.getItem(SECURITY_KEY);
+    if(raw){ var parsed = JSON.parse(raw); if(parsed) return parsed; }
+  }catch(e){ /* ignore */ }
+  return { failedAttempts: 0, lockoutUntil: 0 };
+}
+function saveSecurity(){
+  try{ localStorage.setItem(SECURITY_KEY, JSON.stringify(security)); }catch(e){ /* ignore */ }
+}
+var security = loadSecurity();
+function isLockedOut(){ return Date.now() < security.lockoutUntil; }
+function lockoutRemainingMin(){ return Math.max(1, Math.ceil((security.lockoutUntil - Date.now()) / 60000)); }
+
+/* ================= cloud sync config =================
+   The URL and token live ONLY in this browser's localStorage — never in the
+   HTML source — so hosting index.html publicly (e.g. GitHub Pages) doesn't
+   expose them. */
+var SYNC_CONFIG_KEY = 'ttPlayground_sync_config_v1';
+var AUTO_SYNC_DEBOUNCE_MS = 4000;
+function loadSyncConfig(){
+  try{
+    var raw = localStorage.getItem(SYNC_CONFIG_KEY);
+    if(raw){ var parsed = JSON.parse(raw); if(parsed) return parsed; }
+  }catch(e){ /* ignore */ }
+  return { url: '', token: '', autoSync: false };
+}
+function saveSyncConfigToStorage(){
+  try{ localStorage.setItem(SYNC_CONFIG_KEY, JSON.stringify(syncConfig)); }catch(e){ /* ignore */ }
+}
+var syncConfig = loadSyncConfig();
+var autoSyncTimer = null;
+var syncInFlight = false;
+var initialLoadDone = false;
+
+/* ================= helpers ================= */
+function byId(id){ return document.getElementById(id); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function monthISO(){ return new Date().toISOString().slice(0,7); }
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+  });
+}
+function initials(name){
+  var parts = String(name).trim().split(/\s+/);
+  if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+}
+function colorFor(id){
+  var h = 0;
+  for(var i=0;i<id.length;i++) h = (h*31 + id.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function getPlayer(id){
+  for(var i=0;i<state.players.length;i++) if(state.players[i].id === id) return state.players[i];
+  return null;
+}
+function playerName(id){ var p = getPlayer(id); return p ? p.name : 'Unknown'; }
+function playerCenter(id){ var p = getPlayer(id); return p ? p.center : ''; }
+
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){ /* ignore */ }
+}
+function loadState(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      var parsed = JSON.parse(raw);
+      if(parsed && Array.isArray(parsed.players) && Array.isArray(parsed.matches)){
+        if(!Array.isArray(parsed.subscriptions)) parsed.subscriptions = [];
+        return parsed;
+      }
+    }
+  }catch(e){ /* ignore corrupt data */ }
+  return null;
+}
+
+var toastTimer = null;
+function showToast(html, withTrophy){
+  var t = els.toast;
+  if(!t) return;
+  t.innerHTML = (withTrophy ? '<span class="tt-icon">🏆</span>' : '') + html;
+  t.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3200);
+}
+
+/* ================= PIN auth (one-way hash, no plaintext PIN in code) ================= */
+async function sha256Hex(str){
+  var enc = new TextEncoder().encode(str);
+  var buf = await crypto.subtle.digest('SHA-256', enc);
+  var arr = Array.from(new Uint8Array(buf));
+  return arr.map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+async function verifyPin(pin){
+  try{
+    var hash = await sha256Hex(pin);
+    return hash === PIN_HASH;
+  }catch(e){
+    showToast('PIN verification isn\u2019t available in this browser');
+    return false;
+  }
+}
+var lockTickTimer = null;
+var pinLockoutTickTimer = null;
+
+function formatMMSS(ms){
+  var totalSec = Math.max(0, Math.ceil(ms / 1000));
+  var m = Math.floor(totalSec / 60), s = totalSec % 60;
+  return m + ':' + (s < 10 ? '0' + s : s);
+}
+
+function updateLockUI(){
+  els.lockBtn.classList.toggle('unlocked', unlocked);
+  els.lockBtn.classList.toggle('locked', !unlocked);
+  els.lockBtn.textContent = unlocked ? '🔓 Admin' : '🔒 Admin';
+  if(unlocked){
+    var remaining = UNLOCK_DURATION_MS - (Date.now() - unlockedAt);
+    els.lockCountdown.style.display = 'flex';
+    els.lockCountdown.textContent = '⏳ ' + formatMMSS(remaining) + ' left';
+  } else {
+    els.lockCountdown.style.display = 'none';
+    els.lockCountdown.textContent = '';
+  }
+}
+function startLockTick(){
+  if(lockTickTimer) clearInterval(lockTickTimer);
+  lockTickTimer = setInterval(function(){
+    if(!unlocked){ clearInterval(lockTickTimer); lockTickTimer = null; return; }
+    updateLockUI();
+  }, 1000);
+}
+function stopLockTick(){
+  if(lockTickTimer){ clearInterval(lockTickTimer); lockTickTimer = null; }
+}
+function scheduleAutoLock(){
+  if(autoLockTimer){ clearTimeout(autoLockTimer); autoLockTimer = null; }
+  autoLockTimer = setTimeout(function(){
+    unlocked = false;
+    unlockedAt = 0;
+    stopLockTick();
+    updateLockUI();
+    showToast('Admin session expired after 5 minutes — PIN required again');
+  }, UNLOCK_DURATION_MS);
+  startLockTick();
+}
+function lockNow(){
+  unlocked = false;
+  unlockedAt = 0;
+  if(autoLockTimer){ clearTimeout(autoLockTimer); autoLockTimer = null; }
+  stopLockTick();
+  updateLockUI();
+}
+function isUnlockedAndFresh(){
+  return unlocked && (Date.now() - unlockedAt) < UNLOCK_DURATION_MS;
+}
+function startPinLockoutTick(){
+  if(pinLockoutTickTimer) clearInterval(pinLockoutTickTimer);
+  pinLockoutTickTimer = setInterval(function(){
+    if(!isLockedOut()){
+      clearInterval(pinLockoutTickTimer);
+      pinLockoutTickTimer = null;
+      els.pinInput.disabled = false;
+      els.pinSubmit.disabled = false;
+      els.pinError.style.display = 'none';
+      return;
+    }
+    els.pinError.textContent = 'Too many incorrect attempts. Try again in ' + formatMMSS(security.lockoutUntil - Date.now()) + '.';
+  }, 1000);
+}
+function stopPinLockoutTick(){
+  if(pinLockoutTickTimer){ clearInterval(pinLockoutTickTimer); pinLockoutTickTimer = null; }
+}
+function openPinModal(onSuccess){
+  pendingPinAction = onSuccess || null;
+  els.pinModal.classList.add('open');
+  if(isLockedOut()){
+    els.pinInput.value = '';
+    els.pinInput.disabled = true;
+    els.pinSubmit.disabled = true;
+    els.pinError.style.display = 'block';
+    els.pinError.textContent = 'Too many incorrect attempts. Try again in ' + formatMMSS(security.lockoutUntil - Date.now()) + '.';
+    startPinLockoutTick();
+    return;
+  }
+  els.pinInput.disabled = false;
+  els.pinSubmit.disabled = false;
+  els.pinInput.value = '';
+  els.pinError.style.display = 'none';
+  setTimeout(function(){ els.pinInput.focus(); }, 50);
+}
+function closePinModal(){
+  els.pinModal.classList.remove('open');
+  stopPinLockoutTick();
+  pendingPinAction = null;
+}
+async function submitPin(){
+  if(isLockedOut()){
+    els.pinError.style.display = 'block';
+    els.pinError.textContent = 'Too many incorrect attempts. Try again in ' + lockoutRemainingMin() + ' min.';
+    return;
+  }
+  var val = els.pinInput.value.trim();
+  if(!val) return;
+  var ok = await verifyPin(val);
+  if(ok){
+    security.failedAttempts = 0;
+    security.lockoutUntil = 0;
+    saveSecurity();
+    unlocked = true;
+    unlockedAt = Date.now();
+    scheduleAutoLock();
+    updateLockUI();
+    var action = pendingPinAction;
+    closePinModal();
+    showToast('Admin unlocked for 5 minutes');
+    if(action) action();
+  } else {
+    security.failedAttempts = (security.failedAttempts || 0) + 1;
+    if(security.failedAttempts >= MAX_PIN_ATTEMPTS){
+      security.lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
+      security.failedAttempts = 0;
+      saveSecurity();
+      els.pinInput.disabled = true;
+      els.pinSubmit.disabled = true;
+      els.pinInput.value = '';
+      els.pinError.style.display = 'block';
+      els.pinError.textContent = 'Too many incorrect attempts. Locked for 30 minutes.';
+      startPinLockoutTick();
+    } else {
+      saveSecurity();
+      var remaining = MAX_PIN_ATTEMPTS - security.failedAttempts;
+      els.pinInput.value = '';
+      els.pinError.style.display = 'block';
+      els.pinError.textContent = 'Incorrect PIN. ' + remaining + ' attempt' + (remaining === 1 ? '' : 's') + ' remaining.';
+      els.pinInput.focus();
+    }
+  }
+}
+function requireAuth(action){
+  if(isUnlockedAndFresh()){ action(); return; }
+  if(unlocked){ lockNow(); }
+  openPinModal(action);
+}
+
+/* ================= confetti ================= */
+var confettiCtx = null, confettiParticles = [], confettiRAF = null;
+function initConfetti(){
+  var c = els.confettiCanvas;
+  if(!c) return;
+  function resize(){ c.width = window.innerWidth; c.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  confettiCtx = c.getContext && c.getContext('2d');
+}
+function burstConfetti(){
+  if(!confettiCtx) return;
+  var c = els.confettiCanvas;
+  var colors = ['#FF7A3D','#34C77B','#F4C43A','#4EA8FF','#E63946','#B084F5'];
+  for(var i=0;i<80;i++){
+    confettiParticles.push({
+      x: c.width/2 + (Math.random()-0.5)*160,
+      y: c.height*0.28,
+      vx: (Math.random()-0.5)*9,
+      vy: Math.random()*-7 - 2,
+      g: 0.28,
+      size: Math.random()*7+4,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360,
+      vr: (Math.random()-0.5)*14,
+      life: 100
+    });
+  }
+  if(!confettiRAF) confettiRAF = requestAnimationFrame(tickConfetti);
+}
+function tickConfetti(){
+  var c = els.confettiCanvas;
+  confettiCtx.clearRect(0,0,c.width,c.height);
+  var alive = [];
+  for(var i=0;i<confettiParticles.length;i++){
+    var p = confettiParticles[i];
+    p.vy += p.g;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.rot += p.vr;
+    p.life -= 1;
+    if(p.life > 0 && p.y < c.height + 20){
+      confettiCtx.save();
+      confettiCtx.translate(p.x, p.y);
+      confettiCtx.rotate(p.rot * Math.PI/180);
+      confettiCtx.fillStyle = p.color;
+      confettiCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+      confettiCtx.restore();
+      alive.push(p);
+    }
+  }
+  confettiParticles = alive;
+  if(confettiParticles.length > 0){
+    confettiRAF = requestAnimationFrame(tickConfetti);
+  } else {
+    confettiRAF = null;
+  }
+}
+
+/* ================= points engine ================= */
+// Monthly Session: singles 5/3, doubles 2.5/1 (per player). Tournament: 1/0 for everyone, unlimited entries.
+function pointsForMatch(match){
+  if(match.session.type === 'Tournament'){
+    return { win: POINTS.tourneyWin, lose: POINTS.tourneyLose };
+  }
+  return match.type === 'singles'
+    ? { win: POINTS.singlesWin, lose: POINTS.singlesLose }
+    : { win: POINTS.doublesWin, lose: POINTS.doublesLose };
+}
+
+/* ================= stats engine ================= */
+// opts: { month: 'YYYY-MM' | null, type: 'all' | 'singles' | 'doubles' }
+function computeStats(opts){
+  opts = opts || {};
+  var stats = {};
+  state.players.forEach(function(p){
+    stats[p.id] = { id: p.id, name: p.name, center: p.center, points: 0, matches: 0, wins: 0, losses: 0 };
+  });
+  state.matches.forEach(function(m){
+    if(opts.month && m.date.slice(0,7) !== opts.month) return;
+    if(opts.type && opts.type !== 'all' && m.type !== opts.type) return;
+    var winners = m.winner === 'A' ? m.teamA : m.teamB;
+    var losers  = m.winner === 'A' ? m.teamB : m.teamA;
+    var pts = pointsForMatch(m);
+    winners.forEach(function(id){
+      if(stats[id]){ stats[id].points += pts.win; stats[id].matches++; stats[id].wins++; }
+    });
+    losers.forEach(function(id){
+      if(stats[id]){ stats[id].points += pts.lose; stats[id].matches++; stats[id].losses++; }
+    });
+  });
+  return stats;
+}
+function statsList(opts){
+  var stats = computeStats(opts);
+  var list = [];
+  for(var id in stats){ if(stats.hasOwnProperty(id)) list.push(stats[id]); }
+  return list;
+}
+function topByPoints(opts){
+  var list = statsList(opts).filter(function(s){ return s.matches > 0; });
+  list.sort(function(a,b){ return b.points - a.points; });
+  return list;
+}
+function topByMatches(opts){
+  var list = statsList(opts).filter(function(s){ return s.matches > 0; });
+  list.sort(function(a,b){ return b.matches - a.matches; });
+  return list;
+}
+function overallPoints(playerId){
+  var stats = computeStats({ type: 'all' });
+  return stats[playerId] ? stats[playerId].points : 0;
+}
+function tierFor(points){
+  var tier = TIERS[0];
+  for(var i=0;i<TIERS.length;i++){ if(points >= TIERS[i].min) tier = TIERS[i]; }
+  return tier;
+}
+function nextTier(points){
+  for(var i=0;i<TIERS.length;i++){ if(points < TIERS[i].min) return TIERS[i]; }
+  return null;
+}
+
+/* ================= subscriptions ================= */
+function subscriptionFor(playerId, month){
+  for(var i=0;i<state.subscriptions.length;i++){
+    var s = state.subscriptions[i];
+    if(s.playerId === playerId && s.month === month) return s;
+  }
+  return null;
+}
+function isPlayerActiveThisMonth(playerId){
+  return !!subscriptionFor(playerId, monthISO());
+}
+function upsertSubscription(rec){
+  var existing = subscriptionFor(rec.playerId, rec.month);
+  if(existing){
+    existing.amount = rec.amount;
+    existing.paidDate = rec.paidDate;
+    return existing;
+  }
+  var created = { id: uid(), playerId: rec.playerId, month: rec.month, amount: rec.amount, paidDate: rec.paidDate };
+  state.subscriptions.push(created);
+  return created;
+}
+function removeSubscription(id){
+  state.subscriptions = state.subscriptions.filter(function(s){ return s.id !== id; });
+}
+
+/* ================= monthly-session 24h cap ================= */
+function monthlySessionCountLast24h(playerId, nowMs){
+  var windowStart = nowMs - MONTHLY_SESSION_WINDOW_MS;
+  var count = 0;
+  state.matches.forEach(function(m){
+    if(m.session.type !== 'Monthly Session') return;
+    if(m.createdAt < windowStart || m.createdAt > nowMs) return;
+    if(m.teamA.indexOf(playerId) > -1 || m.teamB.indexOf(playerId) > -1) count++;
+  });
+  return count;
+}
+
+/* ================= render: dashboard ================= */
+function avatarHtml(id, size){
+  var p = getPlayer(id);
+  var name = p ? p.name : '?';
+  var style = 'background:' + colorFor(id) + ';' + (size ? 'width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*0.36)+'px;' : '');
+  return '<div class="avatar" style="' + style + '">' + escapeHtml(initials(name)) + '</div>';
+}
+
+function renderSpotlights(){
+  var month = els.dashMonth.value || monthISO();
+
+  var monthTop = topByPoints({ month: month, type: 'all' });
+  if(monthTop.length){
+    var m0 = monthTop[0];
+    els.spotlightMonth.innerHTML =
+      avatarHtml(m0.id, 46) +
+      '<div class="pname">' + escapeHtml(m0.name) + '</div>' +
+      '<div class="pcenter">' + escapeHtml(m0.center || 'No center') + '</div>' +
+      '<div class="pstat"><b>' + m0.points + '</b>pts this month</div>';
+  } else {
+    els.spotlightMonth.innerHTML = '<div class="empty">No matches recorded this month yet</div>';
+  }
+
+  var overallTop = topByPoints({ type: 'all' });
+  if(overallTop.length){
+    var o0 = overallTop[0];
+    els.spotlightOverall.innerHTML =
+      avatarHtml(o0.id, 46) +
+      '<div class="pname">' + escapeHtml(o0.name) + '</div>' +
+      '<div class="pcenter">' + escapeHtml(o0.center || 'No center') + '</div>' +
+      '<div class="pstat"><b>' + o0.points + '</b>pts all-time</div>';
+  } else {
+    els.spotlightOverall.innerHTML = '<div class="empty">No matches recorded yet</div>';
+  }
+
+  var activeOpts = activeScope === 'month' ? { month: month, type: 'all' } : { type: 'all' };
+  var activeTop = topByMatches(activeOpts);
+  if(activeTop.length){
+    var a0 = activeTop[0];
+    els.spotlightActive.innerHTML =
+      avatarHtml(a0.id, 46) +
+      '<div class="pname">' + escapeHtml(a0.name) + '</div>' +
+      '<div class="pcenter">' + escapeHtml(a0.center || 'No center') + '</div>' +
+      '<div class="pstat"><b>' + a0.matches + '</b>matches ' + (activeScope === 'month' ? 'this month' : 'all-time') + '</div>';
+  } else {
+    els.spotlightActive.innerHTML = '<div class="empty">No matches recorded yet</div>';
+  }
+}
+
+function renderLeaderboardTable(container, opts, emptyLabel, nameFilter){
+  var list = topByPoints(opts);
+  if(nameFilter){
+    var needle = nameFilter.trim().toLowerCase();
+    if(needle) list = list.filter(function(s){ return s.name.toLowerCase().indexOf(needle) > -1; });
+  }
+  if(list.length === 0){
+    var msg = nameFilter && nameFilter.trim()
+      ? 'No players matching "' + escapeHtml(nameFilter.trim()) + '"'
+      : ('No ' + (emptyLabel || opts.type) + ' matches recorded' + (opts.month ? ' for this month' : ''));
+    container.innerHTML = '<div class="empty-hint">' + msg + '</div>';
+    return;
+  }
+  var medals = ['🥇','🥈','🥉'];
+  var rows = list.map(function(s, idx){
+    var rankClass = idx < 3 ? ' rank-' + (idx+1) : '';
+    var rankDisplay = idx < 3 ? medals[idx] : (idx + 1);
+    var winRate = s.matches ? Math.round((s.wins / s.matches) * 100) : 0;
+    return '<tr class="row' + rankClass + '">' +
+      '<td class="num rank-badge">' + rankDisplay + '</td>' +
+      '<td><div class="player-cell">' + avatarHtml(s.id) +
+        '<div class="player-meta"><div class="pname">' + escapeHtml(s.name) + '</div>' +
+        '<div class="pcenter">' + escapeHtml(s.center || 'No center') + '</div></div></div></td>' +
+      '<td class="num pts-val">' + s.points + '</td>' +
+      '<td class="num">' + s.matches + '</td>' +
+      '<td class="num">' + s.wins + '-' + s.losses + '</td>' +
+      '<td class="num">' + winRate + '%</td>' +
+      '</tr>';
+  }).join('');
+  container.innerHTML =
+    '<table class="lb"><tr><th>#</th><th>Player</th><th class="num">Points</th><th class="num">Played</th><th class="num">W-L</th><th class="num">Win%</th></tr>' +
+    rows + '</table>';
+}
+
+function renderDashboard(){
+  var month = els.dashMonth.value || monthISO();
+  var search = els.dashSearch ? els.dashSearch.value : '';
+  renderSpotlights();
+  renderLeaderboardTable(els.lbOverall, { month: month, type: 'all' }, 'combined', search);
+  renderLeaderboardTable(els.lbSingles, { month: month, type: 'singles' }, 'singles', search);
+  renderLeaderboardTable(els.lbDoubles, { month: month, type: 'doubles' }, 'doubles', search);
+}
+
+/* ================= render: players ================= */
+function renderCenterOptions(){
+  var opts = '<option value="">Select community center</option>' + SG_COMMUNITY_CENTERS.map(function(c){
+    return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>';
+  }).join('');
+  [els.newPlayerCenter, els.sessionLocation, els.editMatchLocation].forEach(function(sel){
+    if(!sel) return;
+    var prev = sel.value;
+    sel.innerHTML = opts;
+    if(SG_COMMUNITY_CENTERS.indexOf(prev) > -1) sel.value = prev;
+  });
+}
+
+function renderPlayers(){
+  if(state.players.length === 0){
+    els.playerList.innerHTML = '<div class="empty-hint">No players yet — add your first player above</div>';
+  } else {
+    els.playerList.innerHTML = state.players.map(function(p){
+      var paid = isPlayerActiveThisMonth(p.id);
+      return '<div class="player-item">' +
+        avatarHtml(p.id, 38) +
+        '<div class="info"><div class="pname">' + escapeHtml(p.name) + '</div>' +
+        '<div class="pcenter-row"><span class="pcenter">' + escapeHtml(p.center || 'No center') + '</span>' +
+        '<span class="status-badge ' + (paid ? 'paid' : 'unpaid') + '">' + (paid ? 'Paid' : 'Unpaid') + '</span></div></div>' +
+        '<button class="edit-btn" data-edit-player="' + p.id + '" type="button" title="Edit player">✎</button>' +
+        '<button class="del" data-del-player="' + p.id + '" type="button" title="Remove player">✕</button>' +
+        '</div>';
+    }).join('');
+  }
+  renderPlayerSelects();
+}
+
+function renderPlayerSelects(){
+  var eligible = state.players.filter(function(p){ return isPlayerActiveThisMonth(p.id); });
+  var opts = '<option value="">Select player</option>' + eligible.map(function(p){
+    return '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>';
+  }).join('');
+  ['singlesA','singlesB','doublesA1','doublesA2','doublesB1','doublesB2'].forEach(function(id){
+    var sel = els[id];
+    var prev = sel.value;
+    sel.innerHTML = opts;
+    if(eligible.some(function(p){ return p.id === prev; })) sel.value = prev;
+  });
+  if(els.matchEligibilityNote){
+    els.matchEligibilityNote.textContent = eligible.length === 0
+      ? 'No players have a paid subscription for this month yet — record a payment in the Admin tab first.'
+      : 'Only players with a paid subscription for this month (' + eligible.length + ' of ' + state.players.length + ') appear here.';
+  }
+  updateWinnerOptions();
+}
+
+/* ================= render: matches ================= */
+function updateWinnerOptions(){
+  var wrap = els.winnerOptions;
+  var sideA, sideB, labelA, labelB, ready = false;
+
+  if(matchType === 'singles'){
+    var a = els.singlesA.value, b = els.singlesB.value;
+    labelA = a ? playerName(a) : 'Select players';
+    labelB = b ? playerName(b) : 'Select players';
+    ready = !!(a && b && a !== b);
+  } else {
+    var a1 = els.doublesA1.value, a2 = els.doublesA2.value;
+    var b1 = els.doublesB1.value, b2 = els.doublesB2.value;
+    labelA = (a1 && a2) ? (playerName(a1) + ' & ' + playerName(a2)) : 'Select players';
+    labelB = (b1 && b2) ? (playerName(b1) + ' & ' + playerName(b2)) : 'Select players';
+    var ids = [a1,a2,b1,b2];
+    var allFilled = a1 && a2 && b1 && b2;
+    var allUnique = allFilled && (new Set(ids)).size === 4;
+    ready = !!allUnique;
+  }
+
+  var nodes = wrap.querySelectorAll('.winner-opt');
+  nodes[0].querySelector('.wname').textContent = labelA;
+  nodes[1].querySelector('.wname').textContent = labelB;
+  nodes[0].classList.toggle('checked', winnerSide === 'A');
+  nodes[1].classList.toggle('checked', winnerSide === 'B');
+  wrap.dataset.ready = ready ? '1' : '0';
+  if(!ready) winnerSide = null;
+}
+
+function renderMatchHistory(){
+  if(state.matches.length === 0){
+    els.matchHistory.innerHTML = '<div class="empty-hint">No matches recorded yet</div>';
+    return;
+  }
+  var sorted = state.matches.slice().sort(function(a,b){ return b.date.localeCompare(a.date) || b.createdAt - a.createdAt; });
+  els.matchHistory.innerHTML = sorted.map(function(m){
+    var winners = m.winner === 'A' ? m.teamA : m.teamB;
+    var losers = m.winner === 'A' ? m.teamB : m.teamA;
+    var winNames = winners.map(playerName).join(' & ');
+    var loseNames = losers.map(playerName).join(' & ');
+    var sessionTag = m.session.type === 'Tournament' ? 'tournament' : 'monthly';
+    var pts = pointsForMatch(m);
+    return '<div class="match-item">' +
+      '<div class="mtop">' +
+        '<span class="tag ' + m.type + '">' + m.type + '</span>' +
+        '<span class="tag ' + sessionTag + '">' + escapeHtml(m.session.type) + '</span>' +
+      '</div>' +
+      '<div class="match-fields">' +
+        '<div class="mf-item"><span class="mf-label">Winner</span><span class="mf-val win">' + escapeHtml(winNames) + ' (+' + pts.win + ')</span></div>' +
+        '<div class="mf-item"><span class="mf-label">Runner-up</span><span class="mf-val lose">' + escapeHtml(loseNames) + ' (+' + pts.lose + ')</span></div>' +
+        '<div class="mf-item"><span class="mf-label">Session type</span><span class="mf-val">' + escapeHtml(m.session.type) + '</span></div>' +
+        '<div class="mf-item"><span class="mf-label">Location</span><span class="mf-val">' + escapeHtml(m.session.location || 'Not set') + '</span></div>' +
+        '<div class="mf-item"><span class="mf-label">Date</span><span class="mf-val">' + escapeHtml(m.date) + '</span></div>' +
+        (m.comments ? '<div class="mf-item full-width"><span class="mf-label">Comments</span><span class="mf-val comment">' + escapeHtml(m.comments) + '</span></div>' : '') +
+      '</div>' +
+      '<div class="mfoot">' +
+        '<button class="mdel" data-edit-match="' + m.id + '" type="button" style="color:#4EA8FF;">Edit</button>' +
+        '<button class="mdel" data-del-match="' + m.id + '" type="button">Delete</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+/* ================= render: rewards ================= */
+function renderTierTable(){
+  els.tierTable.innerHTML = TIERS.map(function(t, idx){
+    var range = idx < TIERS.length - 1 ? (t.min + ' – ' + (TIERS[idx+1].min - 1) + ' pts') : (t.min + '+ pts');
+    return '<tr><td><span class="tier-dot" style="background:' + t.color + '"></span>' + t.name + '</td>' +
+      '<td>' + range + '</td><td>' + t.discount + '% off</td></tr>';
+  }).join('');
+}
+
+function renderRewardsList(){
+  if(state.players.length === 0){
+    els.rewardsList.innerHTML = '<div class="empty-hint">No players yet</div>';
+    return;
+  }
+  var list = state.players.map(function(p){
+    var pts = overallPoints(p.id);
+    var tier = tierFor(pts);
+    var next = nextTier(pts);
+    var progress = next ? Math.round(((pts - tier.min) / (next.min - tier.min)) * 100) : 100;
+    return { p: p, pts: pts, tier: tier, next: next, progress: progress };
+  });
+  list.sort(function(a,b){ return b.pts - a.pts; });
+  els.rewardsList.innerHTML = list.map(function(r){
+    return '<div class="player-item" style="flex-direction:column; align-items:stretch;">' +
+      '<div style="display:flex; align-items:center; gap:10px;">' +
+        avatarHtml(r.p.id, 38) +
+        '<div class="info"><div class="pname">' + escapeHtml(r.p.name) + '</div>' +
+        '<div class="pcenter">' + escapeHtml(r.p.center || 'No center') + '</div></div>' +
+        '<div style="text-align:right;"><span class="tier-dot" style="background:' + r.tier.color + '"></span>' +
+        '<b>' + r.tier.name + '</b> · ' + r.tier.discount + '% off</div>' +
+      '</div>' +
+      '<div class="progress-track"><div class="progress-fill" style="width:' + r.progress + '%"></div></div>' +
+      '<div style="font-size:11px; color:var(--text-lo); margin-top:4px;">' + r.pts + ' pts' +
+        (r.next ? (' · ' + (r.next.min - r.pts) + ' pts to ' + r.next.name) : ' · Top tier reached') + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderSubStatusList(){
+  if(state.players.length === 0){
+    els.subStatusList.innerHTML = '<div class="empty-hint">No players yet</div>';
+    return;
+  }
+  var month = monthISO();
+  var rows = state.players.map(function(p){
+    var paid = isPlayerActiveThisMonth(p.id);
+    return '<tr><td><div class="player-cell">' + avatarHtml(p.id) +
+      '<div class="player-meta"><div class="pname">' + escapeHtml(p.name) + '</div>' +
+      '<div class="pcenter">' + escapeHtml(p.center || 'No center') + '</div></div></div></td>' +
+      '<td><span class="status-badge ' + (paid ? 'paid' : 'unpaid') + '">' + (paid ? 'Paid' : 'Unpaid') + '</span></td>' +
+      '<td>' + (paid ? '<button class="mini-btn danger" data-unpay="' + p.id + '" type="button">Mark unpaid</button>'
+                      : '<button class="mini-btn mark" data-quickpay="' + p.id + '" type="button">Mark paid ($2)</button>') + '</td>' +
+      '</tr>';
+  }).join('');
+  els.subStatusList.innerHTML = '<table class="sub-table"><tr><th>Player</th><th>' + month + '</th><th></th></tr>' + rows + '</table>';
+}
+
+var editingSubId = null;
+function renderSubHistory(){
+  if(state.subscriptions.length === 0){
+    els.subHistory.innerHTML = '<div class="empty-hint">No payments recorded yet</div>';
+    return;
+  }
+  var sorted = state.subscriptions.slice().sort(function(a,b){ return b.month.localeCompare(a.month); });
+  var rows = sorted.map(function(s){
+    return '<tr><td>' + escapeHtml(s.month) + '</td>' +
+      '<td>' + escapeHtml(playerName(s.playerId)) + '</td>' +
+      '<td>$' + Number(s.amount).toFixed(2) + '</td>' +
+      '<td>' + escapeHtml(s.paidDate || '—') + '</td>' +
+      '<td><button class="mini-btn edit" data-edit-sub="' + s.id + '" type="button">Edit</button>' +
+      '<button class="mini-btn danger" data-del-sub="' + s.id + '" type="button">Remove</button></td>' +
+      '</tr>';
+  }).join('');
+  els.subHistory.innerHTML = '<table class="sub-table"><tr><th>Month</th><th>Player</th><th>Amount</th><th>Paid date</th><th></th></tr>' + rows + '</table>';
+}
+
+function renderSubPlayerOptions(){
+  var opts = '<option value="">Select player</option>' + state.players.map(function(p){
+    return '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>';
+  }).join('');
+  els.subPlayer.innerHTML = opts;
+}
+
+function renderAdmin(){
+  renderSubPlayerOptions();
+  renderSubStatusList();
+  renderSubHistory();
+}
+
+function renderAll(){
+  renderPlayers();
+  renderMatchHistory();
+  renderDashboard();
+  renderTierTable();
+  renderRewardsList();
+  renderAdmin();
+  saveState();
+  if(initialLoadDone) scheduleAutoSync();
+}
+
+/* ================= actions ================= */
+function addPlayer(){
+  var name = els.newPlayerName.value.trim();
+  var center = els.newPlayerCenter.value;
+  if(!name){ showToast('Enter a player name first'); return; }
+  if(!center){ showToast('Select a community center'); return; }
+  var dup = state.players.some(function(p){ return p.name.toLowerCase() === name.toLowerCase(); });
+  if(dup){ showToast('A player with that name already exists'); return; }
+  state.players.push({ id: uid(), name: name, center: center, createdAt: Date.now() });
+  els.newPlayerName.value = '';
+  els.newPlayerCenter.value = '';
+  renderAll();
+  showToast('Added ' + escapeHtml(name) + ' to the roster');
+}
+
+function removePlayer(id){
+  var p = getPlayer(id);
+  if(!p) return;
+  var used = state.matches.some(function(m){ return m.teamA.indexOf(id) > -1 || m.teamB.indexOf(id) > -1; });
+  if(used){
+    if(!window.confirm(p.name + ' has recorded matches. Removing them will also delete those matches. Continue?')) return;
+    state.matches = state.matches.filter(function(m){ return m.teamA.indexOf(id) === -1 && m.teamB.indexOf(id) === -1; });
+  }
+  state.players = state.players.filter(function(pl){ return pl.id !== id; });
+  renderAll();
+  showToast('Removed ' + escapeHtml(p.name));
+}
+
+function switchMatchType(type){
+  matchType = type;
+  els.matchTypeSeg.querySelectorAll('button').forEach(function(b){
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+  els.singlesFields.style.display = type === 'singles' ? 'grid' : 'none';
+  els.doublesFields.classList.toggle('show', type === 'doubles');
+  winnerSide = null;
+  updateWinnerOptions();
+}
+
+function submitMatch(){
+  if(state.players.length < 2){ showToast('Add at least 2 players first'); return; }
+  var teamA, teamB;
+  if(matchType === 'singles'){
+    var a = els.singlesA.value, b = els.singlesB.value;
+    if(!a || !b){ showToast('Select both players'); return; }
+    if(a === b){ showToast('Choose two different players'); return; }
+    teamA = [a]; teamB = [b];
+  } else {
+    var a1 = els.doublesA1.value, a2 = els.doublesA2.value;
+    var b1 = els.doublesB1.value, b2 = els.doublesB2.value;
+    if(!a1 || !a2 || !b1 || !b2){ showToast('Select all four players'); return; }
+    var ids = [a1,a2,b1,b2];
+    if((new Set(ids)).size !== 4){ showToast('Each player can only appear once'); return; }
+    teamA = [a1,a2]; teamB = [b1,b2];
+  }
+  if(!winnerSide){ showToast('Select the winning side'); return; }
+
+  var sessionType = els.sessionType.value;
+  var location = els.sessionLocation.value;
+  var comments = els.matchComments.value.trim();
+  var date = els.matchDate.value || todayISO();
+  var now = Date.now();
+
+  // Monthly Session cap: max 3 matches per player in any rolling 24-hour period. Tournaments are unlimited.
+  if(sessionType === 'Monthly Session'){
+    var allPlayers = teamA.concat(teamB);
+    for(var i=0;i<allPlayers.length;i++){
+      var pid = allPlayers[i];
+      if(monthlySessionCountLast24h(pid, now) >= MONTHLY_SESSION_CAP){
+        showToast(escapeHtml(playerName(pid)) + ' has already played ' + MONTHLY_SESSION_CAP + ' Monthly Session matches in the last 24 hours');
+        return;
+      }
+    }
+  }
+
+  var match = {
+    id: uid(),
+    type: matchType,
+    teamA: teamA,
+    teamB: teamB,
+    winner: winnerSide,
+    session: { type: sessionType, location: location },
+    comments: comments,
+    date: date,
+    createdAt: now
+  };
+  state.matches.push(match);
+
+  var winners = winnerSide === 'A' ? teamA : teamB;
+  var pts = pointsForMatch(match);
+  var winNames = winners.map(playerName).join(' & ');
+
+  [els.singlesA, els.singlesB, els.doublesA1, els.doublesA2, els.doublesB1, els.doublesB2].forEach(function(s){ s.value=''; });
+  els.matchComments.value = '';
+  winnerSide = null;
+
+  renderAll();
+  burstConfetti();
+  showToast(escapeHtml(winNames) + ' win' + (winners.length>1?'':'s') + '! +' + pts.win + ' pts each', true);
+}
+
+function deleteMatch(id){
+  if(!window.confirm('Delete this match result?')) return;
+  state.matches = state.matches.filter(function(m){ return m.id !== id; });
+  renderAll();
+  showToast('Match deleted');
+}
+
+/* ================= subscription actions ================= */
+function saveSubscriptionFromForm(){
+  var playerId = els.subPlayer.value;
+  var month = els.subMonth.value;
+  var amount = parseFloat(els.subAmount.value);
+  var paidDate = els.subPaidDate.value || todayISO();
+  if(!playerId){ showToast('Select a player'); return; }
+  if(!month){ showToast('Select a month'); return; }
+  if(isNaN(amount) || amount < 0){ showToast('Enter a valid amount'); return; }
+
+  upsertSubscription({ playerId: playerId, month: month, amount: amount, paidDate: paidDate });
+  editingSubId = null;
+  els.subFormReset.style.display = 'none';
+  els.subPlayer.value = '';
+  els.subMonth.value = monthISO();
+  els.subAmount.value = '2';
+  els.subPaidDate.value = todayISO();
+  renderAll();
+  showToast('Payment saved for ' + escapeHtml(month));
+}
+
+function startEditSubscription(id){
+  var s = state.subscriptions.find(function(x){ return x.id === id; });
+  if(!s) return;
+  editingSubId = id;
+  els.subPlayer.value = s.playerId;
+  els.subMonth.value = s.month;
+  els.subAmount.value = s.amount;
+  els.subPaidDate.value = s.paidDate || '';
+  els.subFormReset.style.display = 'inline-block';
+  switchTab('admin');
+  els.subPlayer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelEditSubscription(){
+  editingSubId = null;
+  els.subFormReset.style.display = 'none';
+  els.subPlayer.value = '';
+  els.subMonth.value = monthISO();
+  els.subAmount.value = '2';
+  els.subPaidDate.value = todayISO();
+}
+
+function quickMarkPaid(playerId){
+  upsertSubscription({ playerId: playerId, month: monthISO(), amount: 2, paidDate: todayISO() });
+  renderAll();
+  showToast(escapeHtml(playerName(playerId)) + ' marked paid for ' + monthISO());
+}
+function quickMarkUnpaid(playerId){
+  var s = subscriptionFor(playerId, monthISO());
+  if(s){ removeSubscription(s.id); renderAll(); showToast(escapeHtml(playerName(playerId)) + ' marked unpaid for ' + monthISO()); }
+}
+function removeSubscriptionAction(id){
+  if(!window.confirm('Remove this payment record?')) return;
+  removeSubscription(id);
+  renderAll();
+  showToast('Payment record removed');
+}
+
+/* ================= edit player ================= */
+var editingPlayerId = null;
+function openEditPlayer(id){
+  var p = getPlayer(id);
+  if(!p) return;
+  editingPlayerId = id;
+  els.editPlayerName.value = p.name;
+  els.editPlayerCenter.innerHTML = SG_COMMUNITY_CENTERS.map(function(c){
+    return '<option value="' + escapeHtml(c) + '"' + (c === p.center ? ' selected' : '') + '>' + escapeHtml(c) + '</option>';
+  }).join('');
+  els.editPlayerModal.classList.add('open');
+}
+function saveEditPlayer(){
+  var p = getPlayer(editingPlayerId);
+  if(!p) return;
+  var name = els.editPlayerName.value.trim();
+  var center = els.editPlayerCenter.value;
+  if(!name){ showToast('Enter a player name'); return; }
+  p.name = name;
+  p.center = center;
+  els.editPlayerModal.classList.remove('open');
+  editingPlayerId = null;
+  renderAll();
+  showToast('Player updated');
+}
+
+/* ================= edit match ================= */
+var editingMatchId = null;
+var editWinnerSide = null;
+function openEditMatch(id){
+  var m = state.matches.find(function(x){ return x.id === id; });
+  if(!m) return;
+  editingMatchId = id;
+  editWinnerSide = m.winner;
+  els.editMatchSessionType.value = m.session.type;
+  els.editMatchLocation.value = m.session.location || '';
+  els.editMatchDate.value = m.date;
+  els.editMatchComments.value = m.comments || '';
+  var nodes = els.editWinnerOptions.querySelectorAll('.winner-opt');
+  nodes[0].querySelector('.wname').textContent = m.teamA.map(playerName).join(' & ');
+  nodes[1].querySelector('.wname').textContent = m.teamB.map(playerName).join(' & ');
+  nodes[0].classList.toggle('checked', editWinnerSide === 'A');
+  nodes[1].classList.toggle('checked', editWinnerSide === 'B');
+  els.editMatchModal.classList.add('open');
+}
+function saveEditMatch(){
+  var m = state.matches.find(function(x){ return x.id === editingMatchId; });
+  if(!m) return;
+  m.session.type = els.editMatchSessionType.value;
+  m.session.location = els.editMatchLocation.value;
+  m.comments = els.editMatchComments.value.trim();
+  m.date = els.editMatchDate.value || m.date;
+  m.winner = editWinnerSide;
+  els.editMatchModal.classList.remove('open');
+  editingMatchId = null;
+  renderAll();
+  showToast('Match updated');
+}
+
+/* ================= export / import ================= */
+function downloadFile(filename, content, mime){
+  try{
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    return true;
+  }catch(e){
+    showToast('Download failed — try a different browser');
+    return false;
+  }
+}
+function exportAllData(){
+  var payload = {
+    exportedAt: new Date().toISOString(),
+    app: 'Table Tennis Playground',
+    version: 2,
+    players: state.players,
+    matches: state.matches,
+    subscriptions: state.subscriptions
+  };
+  var ok = downloadFile('ttplayground_backup_' + todayISO() + '.json', JSON.stringify(payload, null, 2), 'application/json');
+  if(ok) showToast('Backup downloaded');
+}
+function importAllData(file){
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var parsed = JSON.parse(reader.result);
+      if(!parsed || !Array.isArray(parsed.players) || !Array.isArray(parsed.matches)){
+        showToast('That file doesn’t look like a valid backup');
+        return;
+      }
+      if(!window.confirm('Import will replace ALL current data (players, matches, payments). Continue?')) return;
+      state = {
+        players: parsed.players,
+        matches: parsed.matches,
+        subscriptions: Array.isArray(parsed.subscriptions) ? parsed.subscriptions : []
+      };
+      renderAll();
+      showToast('Data imported successfully');
+    }catch(e){
+      showToast('Couldn’t read that file — is it a valid JSON backup?');
+    }
+  };
+  reader.onerror = function(){ showToast('Failed to read the file'); };
+  reader.readAsText(file);
+}
+
+/* ---- per-section export/import (players / matches / subscriptions individually) ---- */
+var SECTION_LABELS = { players: 'players', matches: 'matches', subscriptions: 'payment records' };
+function exportSection(section){
+  var payload = {
+    exportedAt: new Date().toISOString(),
+    app: 'Table Tennis Playground',
+    section: section,
+    data: state[section]
+  };
+  var ok = downloadFile('ttplayground_' + section + '_' + todayISO() + '.json', JSON.stringify(payload, null, 2), 'application/json');
+  if(ok) showToast('Exported ' + SECTION_LABELS[section]);
+}
+function importSection(section, file){
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var parsed = JSON.parse(reader.result);
+      var data = Array.isArray(parsed) ? parsed : parsed.data;
+      if(!Array.isArray(data)){
+        showToast('That file doesn\u2019t look like a valid ' + SECTION_LABELS[section] + ' export');
+        return;
+      }
+      if(!window.confirm('Import will replace all current ' + SECTION_LABELS[section] + '. Continue?')) return;
+      state[section] = data;
+      renderAll();
+      showToast('Imported ' + SECTION_LABELS[section]);
+    }catch(e){
+      showToast('Couldn\u2019t read that file — is it valid JSON?');
+    }
+  };
+  reader.onerror = function(){ showToast('Failed to read the file'); };
+  reader.readAsText(file);
+}
+
+/* ================= cloud sync (Google Sheet via Apps Script) ================= */
+function setSyncStatus(msg, kind){
+  if(!els.syncStatus) return;
+  els.syncStatus.textContent = msg;
+  els.syncStatus.className = 'sync-status ' + (kind || 'idle');
+}
+function syncConfigured(){
+  return !!(syncConfig.url && syncConfig.token);
+}
+function buildSyncPayload(){
+  return {
+    token: syncConfig.token,
+    players: state.players,
+    matches: state.matches,
+    subscriptions: state.subscriptions
+  };
+}
+function saveSyncSettings(){
+  syncConfig.url = els.syncUrl.value.trim();
+  syncConfig.token = els.syncToken.value.trim();
+  syncConfig.autoSync = els.syncAutoToggle.checked;
+  saveSyncConfigToStorage();
+  if(syncConfigured()){
+    setSyncStatus('Settings saved. Use "Test connection" to verify it works.', 'idle');
+  } else {
+    setSyncStatus('Not connected — paste your Web App URL and token above, then Save settings.', 'idle');
+  }
+  showToast('Sync settings saved');
+}
+async function syncTest(){
+  if(!syncConfigured()){ setSyncStatus('Enter a URL and token first, then Save settings.', 'err'); return; }
+  setSyncStatus('Testing connection…', 'idle');
+  try{
+    var url = syncConfig.url + (syncConfig.url.indexOf('?') > -1 ? '&' : '?') + 'token=' + encodeURIComponent(syncConfig.token);
+    var res = await fetch(url, { method: 'GET' });
+    var data = await res.json();
+    if(data && data.ok){
+      setSyncStatus('Connected — sheet has ' + (data.players||[]).length + ' players, ' + (data.matches||[]).length + ' matches, ' + (data.subscriptions||[]).length + ' payments.', 'ok');
+    } else {
+      setSyncStatus('Connection failed: ' + (data && data.error ? data.error : 'unexpected response'), 'err');
+    }
+  }catch(err){
+    setSyncStatus('Connection failed: ' + (err && err.message ? err.message : 'network error'), 'err');
+  }
+}
+async function syncPush(silent){
+  if(!syncConfigured()){ if(!silent) setSyncStatus('Enter a URL and token first, then Save settings.', 'err'); return false; }
+  if(syncInFlight) return false;
+  syncInFlight = true;
+  if(!silent) setSyncStatus('Syncing to Sheet…', 'idle');
+  try{
+    var res = await fetch(syncConfig.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids a CORS preflight against Apps Script
+      body: JSON.stringify(buildSyncPayload())
+    });
+    var data = await res.json();
+    syncInFlight = false;
+    if(data && data.ok){
+      setSyncStatus('Last synced to Sheet at ' + new Date(data.syncedAt || Date.now()).toLocaleTimeString() + '.', 'ok');
+      return true;
+    } else {
+      setSyncStatus('Sync failed: ' + (data && data.error ? data.error : 'unexpected response'), 'err');
+      return false;
+    }
+  }catch(err){
+    syncInFlight = false;
+    setSyncStatus('Sync failed: ' + (err && err.message ? err.message : 'network error'), 'err');
+    return false;
+  }
+}
+async function syncPull(){
+  if(!syncConfigured()){ setSyncStatus('Enter a URL and token first, then Save settings.', 'err'); return; }
+  setSyncStatus('Loading from Sheet…', 'idle');
+  try{
+    var url = syncConfig.url + (syncConfig.url.indexOf('?') > -1 ? '&' : '?') + 'token=' + encodeURIComponent(syncConfig.token);
+    var res = await fetch(url, { method: 'GET' });
+    var data = await res.json();
+    if(!data || !data.ok){
+      setSyncStatus('Load failed: ' + (data && data.error ? data.error : 'unexpected response'), 'err');
+      return;
+    }
+    if(!window.confirm('This will replace all local data with what\u2019s in the Sheet. Continue?')) return;
+    state = {
+      players: Array.isArray(data.players) ? data.players : [],
+      matches: Array.isArray(data.matches) ? data.matches : [],
+      subscriptions: Array.isArray(data.subscriptions) ? data.subscriptions : []
+    };
+    renderAll();
+    setSyncStatus('Loaded from Sheet at ' + new Date().toLocaleTimeString() + '.', 'ok');
+    showToast('Data loaded from Google Sheet');
+  }catch(err){
+    setSyncStatus('Load failed: ' + (err && err.message ? err.message : 'network error'), 'err');
+  }
+}
+function scheduleAutoSync(){
+  if(!syncConfig.autoSync || !syncConfigured()) return;
+  if(autoSyncTimer) clearTimeout(autoSyncTimer);
+  autoSyncTimer = setTimeout(function(){
+    autoSyncTimer = null;
+    syncPush(true);
+  }, AUTO_SYNC_DEBOUNCE_MS);
+}
+
+/* ================= dummy seed data ================= */
+function seedDummyData(){
+  var centerA = "Bishan Community Club";
+  var centerB = "Toa Payoh Central Community Club";
+  var centerC = "Tampines East Community Club";
+  var centerD = "Woodlands Community Club";
+  var centerE = "Jurong Green Community Club";
+  var centerF = "Ang Mo Kio Community Centre";
+  var centerG = "Clementi Community Centre";
+  var centerH = "Hougang Community Club";
+
+  function P(name, center){ return { id: uid(), name: name, center: center, createdAt: Date.now() }; }
+  var players = [
+    P('Alex Tan', centerA), P('Mei Lin Goh', centerB), P('Ryan Koh', centerC), P('Siti Nurhaliza', centerD),
+    P('Kumar Raj', centerE), P('Wei Jie Lim', centerF), P('Farah Aziz', centerG), P('Daniel Ong', centerH)
+  ];
+  var byName = {};
+  players.forEach(function(p){ byName[p.name] = p.id; });
+
+  function M(type, sType, date, loc, tA, tB, winner, comments){
+    return {
+      id: uid(), type: type,
+      teamA: tA.map(function(n){ return byName[n]; }),
+      teamB: tB.map(function(n){ return byName[n]; }),
+      winner: winner,
+      session: { type: sType, location: loc },
+      comments: comments || '',
+      date: date,
+      createdAt: new Date(date + 'T10:00:00').getTime()
+    };
+  }
+
+  var thisMonth = monthISO();
+  var d = thisMonth + '-';
+  var matches = [
+    M('singles','Monthly Session', d+'03', centerA, ['Alex Tan'], ['Mei Lin Goh'], 'A', 'Close 3-set match, great rallies in the decider.'),
+    M('singles','Monthly Session', d+'05', centerC, ['Ryan Koh'], ['Siti Nurhaliza'], 'B'),
+    M('doubles','Monthly Session', d+'07', centerE, ['Alex Tan','Kumar Raj'], ['Wei Jie Lim','Farah Aziz'], 'A'),
+    M('singles','Tournament',      d+'10', centerH, ['Alex Tan'], ['Daniel Ong'], 'B', 'Quarter-final of the September tournament.'),
+    M('doubles','Tournament',      d+'12', centerB, ['Mei Lin Goh','Siti Nurhaliza'], ['Ryan Koh','Farah Aziz'], 'A'),
+    M('singles','Monthly Session', d+'14', centerG, ['Farah Aziz'], ['Ryan Koh'], 'A'),
+    M('singles','Monthly Session', '2026-08-20', centerF, ['Wei Jie Lim'], ['Daniel Ong'], 'A'),
+    M('singles','Monthly Session', '2026-08-22', centerG, ['Kumar Raj'], ['Farah Aziz'], 'A'),
+    M('doubles','Monthly Session', '2026-08-25', centerA, ['Alex Tan','Siti Nurhaliza'], ['Mei Lin Goh','Ryan Koh'], 'A'),
+    M('singles','Tournament',      '2026-08-28', centerD, ['Siti Nurhaliza'], ['Kumar Raj'], 'A')
+  ];
+
+  // Seed subscriptions: everyone paid for the current month except Daniel Ong,
+  // to demonstrate the "unpaid players are hidden from match selectors" behaviour.
+  var subscriptions = [];
+  var curMonth = monthISO();
+  players.forEach(function(p){
+    if(p.name === 'Daniel Ong') return; // left unpaid on purpose
+    subscriptions.push({ id: uid(), playerId: p.id, month: curMonth, amount: 2, paidDate: todayISO() });
+  });
+
+  return { players: players, matches: matches, subscriptions: subscriptions };
+}
+
+/* ================= fullscreen ================= */
+function isFullscreen(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+}
+function goFullscreen(){
+  var de = document.documentElement;
+  var req = de.requestFullscreen || de.webkitRequestFullscreen || de.mozRequestFullScreen || de.msRequestFullscreen;
+  if(!req){ showToast('Fullscreen isn\u2019t supported in this browser'); return; }
+  try{
+    var p = req.call(de);
+    if(p && typeof p.catch === 'function'){
+      p.catch(function(){ showToast('Fullscreen blocked — open this file in its own browser tab'); });
+    }
+  }catch(err){ showToast('Fullscreen blocked — open this file in its own browser tab'); }
+}
+function leaveFullscreen(){
+  var exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+  if(exit) exit.call(document);
+}
+
+/* ================= tabs ================= */
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === tab); });
+  document.querySelectorAll('.tab-panel').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + tab); });
+  if(tab === 'dashboard') renderDashboard();
+  if(tab === 'rewards'){ renderTierTable(); renderRewardsList(); }
+  if(tab === 'admin') renderAdmin();
+}
+
+/* ================= init ================= */
+function init(){
+  var ids = ['lockBtn','lockCountdown','infoBtn','fullscreenBtn','dashMonth','activeScopeChips','resetFilters','dashSearch',
+    'spotlightMonth','spotlightOverall','spotlightActive','lbOverall','lbSingles','lbDoubles',
+    'newPlayerName','newPlayerCenter','addPlayerBtn','playerList','matchEligibilityNote',
+    'matchTypeSeg','singlesFields','doublesFields','singlesA','singlesB',
+    'doublesA1','doublesA2','doublesB1','doublesB2','sessionType','sessionLocation','matchComments',
+    'matchDate','winnerOptions','submitMatchBtn','matchHistory',
+    'tierTable','rewardsList','toast','confettiCanvas','infoModal','closeInfoModal',
+    'pinModal','pinInput','pinError','pinSubmit','pinCancel',
+    'subStatusList','subPlayer','subMonth','subAmount','subPaidDate','subSaveBtn','subFormReset','subHistory',
+    'exportBtn','importBtn','importFile',
+    'exportPlayersBtn','importPlayersBtn','importPlayersFile',
+    'exportMatchesBtn','importMatchesBtn','importMatchesFile',
+    'exportSubsBtn','importSubsBtn','importSubsFile',
+    'editPlayerModal','editPlayerName','editPlayerCenter','editPlayerSave','editPlayerCancel',
+    'editMatchModal','editMatchSessionType','editMatchLocation','editMatchDate','editMatchComments','editWinnerOptions',
+    'editMatchSave','editMatchCancel',
+    'syncUrl','syncToken','syncAutoToggle','syncSaveBtn','syncTestBtn','syncPushBtn','syncPullBtn','syncStatus'];
+  var missing = [];
+  ids.forEach(function(id){ var n = byId(id); if(!n) missing.push(id); els[id] = n; });
+  if(missing.length){
+    alert('Setup error — missing elements: ' + missing.join(', '));
+    return;
+  }
+
+  var loaded = loadState();
+  if(loaded){
+    state = loaded;
+  } else {
+    state = seedDummyData();
+  }
+
+  els.dashMonth.value = monthISO();
+  els.matchDate.value = todayISO();
+  els.subMonth.value = monthISO();
+  els.subPaidDate.value = todayISO();
+  els.syncUrl.value = syncConfig.url || '';
+  els.syncToken.value = syncConfig.token || '';
+  els.syncAutoToggle.checked = !!syncConfig.autoSync;
+  if(syncConfigured()){
+    setSyncStatus('Settings loaded from this browser. Use "Test connection" to verify it still works.', 'idle');
+  }
+
+  initConfetti();
+  renderCenterOptions();
+  renderAll();
+  initialLoadDone = true;
+  switchMatchType('singles');
+  updateLockUI();
+
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ switchTab(btn.dataset.tab); });
+  });
+
+  // players (PIN-gated)
+  els.addPlayerBtn.addEventListener('click', function(){ requireAuth(addPlayer); });
+  els.newPlayerName.addEventListener('keydown', function(e){ if(e.key === 'Enter') requireAuth(addPlayer); });
+  els.playerList.addEventListener('click', function(e){
+    var delBtn = e.target.closest('[data-del-player]');
+    if(delBtn){
+      var did = delBtn.getAttribute('data-del-player');
+      requireAuth(function(){ removePlayer(did); });
+      return;
+    }
+    var editBtn = e.target.closest('[data-edit-player]');
+    if(editBtn){
+      var eid = editBtn.getAttribute('data-edit-player');
+      requireAuth(function(){ openEditPlayer(eid); });
+    }
+  });
+
+  els.matchTypeSeg.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){ switchMatchType(b.dataset.type); });
+  });
+
+  [els.singlesA, els.singlesB, els.doublesA1, els.doublesA2, els.doublesB1, els.doublesB2].forEach(function(sel){
+    sel.addEventListener('change', function(){ winnerSide = null; updateWinnerOptions(); });
+  });
+
+  els.winnerOptions.addEventListener('click', function(e){
+    var opt = e.target.closest('.winner-opt');
+    if(!opt) return;
+    if(els.winnerOptions.dataset.ready !== '1'){ showToast('Select all players for this match first'); return; }
+    winnerSide = opt.dataset.side;
+    updateWinnerOptions();
+  });
+
+  // match save (PIN-gated)
+  els.submitMatchBtn.addEventListener('click', function(){ requireAuth(submitMatch); });
+
+  els.matchHistory.addEventListener('click', function(e){
+    var delBtn = e.target.closest('[data-del-match]');
+    if(delBtn){ requireAuth(function(){ deleteMatch(delBtn.getAttribute('data-del-match')); }); return; }
+    var editBtn = e.target.closest('[data-edit-match]');
+    if(editBtn){ requireAuth(function(){ openEditMatch(editBtn.getAttribute('data-edit-match')); }); }
+  });
+
+  els.dashMonth.addEventListener('change', renderDashboard);
+  els.dashSearch.addEventListener('input', renderDashboard);
+  els.resetFilters.addEventListener('click', function(){
+    els.dashMonth.value = monthISO();
+    els.dashSearch.value = '';
+    renderDashboard();
+  });
+  els.activeScopeChips.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){
+      activeScope = b.dataset.scope;
+      els.activeScopeChips.querySelectorAll('button').forEach(function(x){ x.classList.toggle('active', x === b); });
+      renderSpotlights();
+    });
+  });
+
+  els.infoBtn.addEventListener('click', function(){ els.infoModal.classList.add('open'); });
+  els.closeInfoModal.addEventListener('click', function(){ els.infoModal.classList.remove('open'); });
+  els.infoModal.addEventListener('click', function(e){ if(e.target === els.infoModal) els.infoModal.classList.remove('open'); });
+
+  // PIN modal
+  els.lockBtn.addEventListener('click', function(){
+    if(isUnlockedAndFresh()){
+      lockNow();
+      showToast('Admin locked');
+    } else {
+      if(unlocked) lockNow();
+      openPinModal(null);
+    }
+  });
+  els.pinSubmit.addEventListener('click', submitPin);
+  els.pinInput.addEventListener('keydown', function(e){ if(e.key === 'Enter') submitPin(); });
+  els.pinCancel.addEventListener('click', closePinModal);
+  els.pinModal.addEventListener('click', function(e){ if(e.target === els.pinModal) closePinModal(); });
+
+  // subscriptions (PIN-gated)
+  els.subSaveBtn.addEventListener('click', function(){ requireAuth(saveSubscriptionFromForm); });
+  els.subFormReset.addEventListener('click', cancelEditSubscription);
+
+  els.subStatusList.addEventListener('click', function(e){
+    var payBtn = e.target.closest('[data-quickpay]');
+    if(payBtn){ requireAuth(function(){ quickMarkPaid(payBtn.getAttribute('data-quickpay')); }); return; }
+    var unpayBtn = e.target.closest('[data-unpay]');
+    if(unpayBtn){ requireAuth(function(){ quickMarkUnpaid(unpayBtn.getAttribute('data-unpay')); }); }
+  });
+
+  els.subHistory.addEventListener('click', function(e){
+    var editBtn = e.target.closest('[data-edit-sub]');
+    if(editBtn){ requireAuth(function(){ startEditSubscription(editBtn.getAttribute('data-edit-sub')); }); return; }
+    var delBtn = e.target.closest('[data-del-sub]');
+    if(delBtn){ requireAuth(function(){ removeSubscriptionAction(delBtn.getAttribute('data-del-sub')); }); }
+  });
+
+  // edit player modal
+  els.editPlayerSave.addEventListener('click', saveEditPlayer);
+  els.editPlayerCancel.addEventListener('click', function(){ els.editPlayerModal.classList.remove('open'); editingPlayerId = null; });
+  els.editPlayerModal.addEventListener('click', function(e){ if(e.target === els.editPlayerModal){ els.editPlayerModal.classList.remove('open'); editingPlayerId = null; } });
+
+  // edit match modal
+  els.editWinnerOptions.addEventListener('click', function(e){
+    var opt = e.target.closest('.winner-opt');
+    if(!opt) return;
+    editWinnerSide = opt.dataset.side;
+    els.editWinnerOptions.querySelectorAll('.winner-opt').forEach(function(n){
+      n.classList.toggle('checked', n.dataset.side === editWinnerSide);
+    });
+  });
+  els.editMatchSave.addEventListener('click', saveEditMatch);
+  els.editMatchCancel.addEventListener('click', function(){ els.editMatchModal.classList.remove('open'); editingMatchId = null; });
+  els.editMatchModal.addEventListener('click', function(e){ if(e.target === els.editMatchModal){ els.editMatchModal.classList.remove('open'); editingMatchId = null; } });
+
+  // export / import (PIN-gated) — full backup
+  els.exportBtn.addEventListener('click', function(){ requireAuth(exportAllData); });
+  els.importBtn.addEventListener('click', function(){ requireAuth(function(){ els.importFile.click(); }); });
+  els.importFile.addEventListener('change', function(){
+    var file = els.importFile.files && els.importFile.files[0];
+    if(file) importAllData(file);
+    els.importFile.value = '';
+  });
+
+  // export / import (PIN-gated) — per-section
+  function wireSectionIO(section, exportBtnEl, importBtnEl, importFileEl){
+    exportBtnEl.addEventListener('click', function(){ requireAuth(function(){ exportSection(section); }); });
+    importBtnEl.addEventListener('click', function(){ requireAuth(function(){ importFileEl.click(); }); });
+    importFileEl.addEventListener('change', function(){
+      var file = importFileEl.files && importFileEl.files[0];
+      if(file) importSection(section, file);
+      importFileEl.value = '';
+    });
+  }
+  wireSectionIO('players', els.exportPlayersBtn, els.importPlayersBtn, els.importPlayersFile);
+  wireSectionIO('matches', els.exportMatchesBtn, els.importMatchesBtn, els.importMatchesFile);
+  wireSectionIO('subscriptions', els.exportSubsBtn, els.importSubsBtn, els.importSubsFile);
+
+  // cloud sync (PIN-gated)
+  els.syncSaveBtn.addEventListener('click', function(){ requireAuth(saveSyncSettings); });
+  els.syncTestBtn.addEventListener('click', function(){ requireAuth(syncTest); });
+  els.syncPushBtn.addEventListener('click', function(){ requireAuth(function(){ syncPush(false); }); });
+  els.syncPullBtn.addEventListener('click', function(){ requireAuth(syncPull); });
+
+  els.fullscreenBtn.addEventListener('click', function(){
+    isFullscreen() ? leaveFullscreen() : goFullscreen();
+  });
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
