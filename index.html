@@ -242,9 +242,18 @@
   .modal .close-btn{ margin-top:6px; width:100%; padding:10px; background:none; border:1px solid var(--line); color:var(--text-lo); border-radius:10px; cursor:pointer; }
 
   @media (min-width:720px){
-    main{ max-width:960px; margin:0 auto; width:100%; }
-    header.top{ max-width:960px; margin:0 auto; width:100%; }
-    nav.tabs{ max-width:960px; margin:0 auto; width:100%; justify-content:flex-start; }
+    main{ max-width:1100px; margin:0 auto; width:100%; }
+    header.top{ max-width:1100px; margin:0 auto; width:100%; }
+    nav.tabs{ max-width:1100px; margin:0 auto; width:100%; justify-content:flex-start; }
+    .sheet-status-bar{ max-width:1100px; margin:0 auto; }
+  }
+  @media (min-width:1300px){
+    main{ max-width:1360px; }
+    header.top{ max-width:1360px; }
+    nav.tabs{ max-width:1360px; }
+    .sheet-status-bar{ max-width:1360px; }
+    .form-grid{ grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
+    .player-list{ grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
   }
 
   /* ---------- pin / lock ---------- */
@@ -356,10 +365,9 @@
 
   <nav class="tabs">
     <button class="tab-btn active" data-tab="dashboard" type="button">📊 Dashboard</button>
-    <button class="tab-btn" data-tab="players" type="button">👥 Players</button>
     <button class="tab-btn" data-tab="matches" type="button">🏓 Matches</button>
     <button class="tab-btn" data-tab="rewards" type="button">🎁 Rewards</button>
-    <button class="tab-btn" data-tab="admin" type="button">⚙️ Admin</button>
+    <button class="tab-btn" id="adminTabBtn" data-tab="admin" type="button" style="display:none;">⚙️ Admin</button>
     <button class="tab-btn" data-tab="info" type="button">📖 Info</button>
   </nav>
 
@@ -417,35 +425,14 @@
         <div class="leaderboard-wrap" id="lbDoubles"></div>
       </div>
 
+      <h2 class="section-title">Recent Match History</h2>
+      <div class="card">
+        <div id="dashboardMatchHistory"><div class="empty-hint">No matches recorded yet</div></div>
+      </div>
+
     </section>
 
     <!-- ================= PLAYERS ================= -->
-    <section class="tab-panel" id="tab-players">
-      <h2 class="section-title">Add a player</h2>
-      <div class="card">
-        <div class="form-grid">
-          <div class="form-field">
-            <label>Player name</label>
-            <input type="text" id="newPlayerName" placeholder="e.g. Alex Tan" maxlength="40">
-          </div>
-          <div class="form-field">
-            <label>Community center</label>
-            <select id="newPlayerCenter">
-              <option value="">Select community center</option>
-            </select>
-          </div>
-        </div>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="addPlayerBtn" type="button">+ Add player</button>
-        </div>
-      </div>
-
-      <h2 class="section-title">Roster</h2>
-      <div class="card">
-        <div class="player-list" id="playerList"></div>
-      </div>
-    </section>
-
     <!-- ================= MATCHES ================= -->
     <section class="tab-panel" id="tab-matches">
       <h2 class="section-title">Record a match result</h2>
@@ -549,6 +536,30 @@
 
     <!-- ================= ADMIN ================= -->
     <section class="tab-panel" id="tab-admin">
+      <h2 class="section-title">Add a player</h2>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Player name</label>
+            <input type="text" id="newPlayerName" placeholder="e.g. Alex Tan" maxlength="40">
+          </div>
+          <div class="form-field">
+            <label>Community center</label>
+            <select id="newPlayerCenter">
+              <option value="">Select community center</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="addPlayerBtn" type="button">+ Add player</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">Roster</h2>
+      <div class="card">
+        <div class="player-list" id="playerList"></div>
+      </div>
+
       <h2 class="section-title">This month's subscription status</h2>
       <div class="card">
         <div id="subStatusList"><div class="empty-hint">No players yet</div></div>
@@ -587,42 +598,11 @@
 
       <h2 class="section-title">Data management</h2>
       <div class="card">
-        <p style="color:var(--text-lo); font-size:13px; margin-top:0;">Every action below requires the admin PIN. Full backup covers everything at once; the individual buttons let you export or restore just one kind of record.</p>
-
-        <div style="margin-bottom:16px;">
-          <div style="font-weight:800; font-size:13px; margin-bottom:6px;">Full backup (players + matches + payments)</div>
-          <div class="data-actions">
-            <button class="btn btn-primary" id="exportBtn" type="button">⇩ Export all data</button>
-            <button class="btn btn-outline" id="importBtn" type="button">⇧ Import all data</button>
-            <input type="file" id="importFile" class="file-input-hidden" accept="application/json">
-          </div>
-        </div>
-
-        <div style="margin-bottom:16px;">
-          <div style="font-weight:800; font-size:13px; margin-bottom:6px;">Players only</div>
-          <div class="data-actions">
-            <button class="btn btn-outline" id="exportPlayersBtn" type="button">⇩ Export players</button>
-            <button class="btn btn-outline" id="importPlayersBtn" type="button">⇧ Import players</button>
-            <input type="file" id="importPlayersFile" class="file-input-hidden" accept="application/json">
-          </div>
-        </div>
-
-        <div style="margin-bottom:16px;">
-          <div style="font-weight:800; font-size:13px; margin-bottom:6px;">Matches only</div>
-          <div class="data-actions">
-            <button class="btn btn-outline" id="exportMatchesBtn" type="button">⇩ Export matches</button>
-            <button class="btn btn-outline" id="importMatchesBtn" type="button">⇧ Import matches</button>
-            <input type="file" id="importMatchesFile" class="file-input-hidden" accept="application/json">
-          </div>
-        </div>
-
-        <div>
-          <div style="font-weight:800; font-size:13px; margin-bottom:6px;">Subscriptions only</div>
-          <div class="data-actions">
-            <button class="btn btn-outline" id="exportSubsBtn" type="button">⇩ Export payments</button>
-            <button class="btn btn-outline" id="importSubsBtn" type="button">⇧ Import payments</button>
-            <input type="file" id="importSubsFile" class="file-input-hidden" accept="application/json">
-          </div>
+        <p style="color:var(--text-lo); font-size:13px; margin-top:0;">Exports every player, match, and payment record as one file, or restores everything from a previously exported file. Requires the admin PIN.</p>
+        <div class="data-actions">
+          <button class="btn btn-primary" id="exportBtn" type="button">⇩ Export full backup</button>
+          <button class="btn btn-outline" id="importBtn" type="button">⇧ Import full backup</button>
+          <input type="file" id="importFile" class="file-input-hidden" accept="application/json">
         </div>
       </div>
 
@@ -978,7 +958,6 @@ if(!syncConfig.url && EMBEDDED_SYNC.enabled && EMBEDDED_SYNC.data){
     saveSyncConfigToStorage();
   }
 }
-var syncInFlight = false;
 var initialLoadDone = false;
 
 /* ---- freshness tracking: last write recorded in the Sheet, last time THIS
@@ -1112,6 +1091,12 @@ function updateLockUI(){
   } else {
     els.lockCountdown.style.display = 'none';
     els.lockCountdown.textContent = '';
+  }
+  if(els.adminTabBtn){
+    els.adminTabBtn.style.display = unlocked ? '' : 'none';
+    if(!unlocked && currentTab === 'admin'){
+      switchTab('dashboard');
+    }
   }
 }
 function startLockTick(){
@@ -1485,6 +1470,7 @@ function renderDashboard(){
   renderLeaderboardTable(els.lbOverall, { month: month, type: 'all' }, 'combined', search);
   renderLeaderboardTable(els.lbSingles, { month: month, type: 'singles' }, 'singles', search);
   renderLeaderboardTable(els.lbDoubles, { month: month, type: 'doubles' }, 'doubles', search);
+  renderDashboardMatchHistory();
 }
 
 /* ================= render: players ================= */
@@ -1569,38 +1555,53 @@ function updateWinnerOptions(){
   if(!ready) winnerSide = null;
 }
 
+function buildMatchItemHtml(m, withActions){
+  var winners = m.winner === 'A' ? m.teamA : m.teamB;
+  var losers = m.winner === 'A' ? m.teamB : m.teamA;
+  var winNames = winners.map(playerName).join(' & ');
+  var loseNames = losers.map(playerName).join(' & ');
+  var sessionTag = m.session.type === 'Tournament' ? 'tournament' : 'monthly';
+  var pts = pointsForMatch(m);
+  return '<div class="match-item">' +
+    '<div class="mtop">' +
+      '<span class="tag ' + m.type + '">' + m.type + '</span>' +
+      '<span class="tag ' + sessionTag + '">' + escapeHtml(m.session.type) + '</span>' +
+    '</div>' +
+    '<div class="match-fields">' +
+      '<div class="mf-item"><span class="mf-label">Winner</span><span class="mf-val win">' + escapeHtml(winNames) + ' (+' + pts.win + ')</span></div>' +
+      '<div class="mf-item"><span class="mf-label">Runner-up</span><span class="mf-val lose">' + escapeHtml(loseNames) + ' (+' + pts.lose + ')</span></div>' +
+      '<div class="mf-item"><span class="mf-label">Session type</span><span class="mf-val">' + escapeHtml(m.session.type) + '</span></div>' +
+      '<div class="mf-item"><span class="mf-label">Location</span><span class="mf-val">' + escapeHtml(m.session.location || 'Not set') + '</span></div>' +
+      '<div class="mf-item"><span class="mf-label">Date</span><span class="mf-val">' + escapeHtml(m.date) + '</span></div>' +
+      (m.comments ? '<div class="mf-item full-width"><span class="mf-label">Comments</span><span class="mf-val comment">' + escapeHtml(m.comments) + '</span></div>' : '') +
+    '</div>' +
+    (withActions ?
+      '<div class="mfoot">' +
+        '<button class="mdel" data-edit-match="' + m.id + '" type="button" style="color:#4EA8FF;">Edit</button>' +
+        '<button class="mdel" data-del-match="' + m.id + '" type="button">Delete</button>' +
+      '</div>'
+      : '') +
+  '</div>';
+}
+function sortedMatches(){
+  return state.matches.slice().sort(function(a,b){ return b.date.localeCompare(a.date) || b.createdAt - a.createdAt; });
+}
 function renderMatchHistory(){
   if(state.matches.length === 0){
     els.matchHistory.innerHTML = '<div class="empty-hint">No matches recorded yet</div>';
     return;
   }
-  var sorted = state.matches.slice().sort(function(a,b){ return b.date.localeCompare(a.date) || b.createdAt - a.createdAt; });
-  els.matchHistory.innerHTML = sorted.map(function(m){
-    var winners = m.winner === 'A' ? m.teamA : m.teamB;
-    var losers = m.winner === 'A' ? m.teamB : m.teamA;
-    var winNames = winners.map(playerName).join(' & ');
-    var loseNames = losers.map(playerName).join(' & ');
-    var sessionTag = m.session.type === 'Tournament' ? 'tournament' : 'monthly';
-    var pts = pointsForMatch(m);
-    return '<div class="match-item">' +
-      '<div class="mtop">' +
-        '<span class="tag ' + m.type + '">' + m.type + '</span>' +
-        '<span class="tag ' + sessionTag + '">' + escapeHtml(m.session.type) + '</span>' +
-      '</div>' +
-      '<div class="match-fields">' +
-        '<div class="mf-item"><span class="mf-label">Winner</span><span class="mf-val win">' + escapeHtml(winNames) + ' (+' + pts.win + ')</span></div>' +
-        '<div class="mf-item"><span class="mf-label">Runner-up</span><span class="mf-val lose">' + escapeHtml(loseNames) + ' (+' + pts.lose + ')</span></div>' +
-        '<div class="mf-item"><span class="mf-label">Session type</span><span class="mf-val">' + escapeHtml(m.session.type) + '</span></div>' +
-        '<div class="mf-item"><span class="mf-label">Location</span><span class="mf-val">' + escapeHtml(m.session.location || 'Not set') + '</span></div>' +
-        '<div class="mf-item"><span class="mf-label">Date</span><span class="mf-val">' + escapeHtml(m.date) + '</span></div>' +
-        (m.comments ? '<div class="mf-item full-width"><span class="mf-label">Comments</span><span class="mf-val comment">' + escapeHtml(m.comments) + '</span></div>' : '') +
-      '</div>' +
-      '<div class="mfoot">' +
-        '<button class="mdel" data-edit-match="' + m.id + '" type="button" style="color:#4EA8FF;">Edit</button>' +
-        '<button class="mdel" data-del-match="' + m.id + '" type="button">Delete</button>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+  els.matchHistory.innerHTML = sortedMatches().map(function(m){ return buildMatchItemHtml(m, true); }).join('');
+}
+function renderDashboardMatchHistory(){
+  if(!els.dashboardMatchHistory) return;
+  if(state.matches.length === 0){
+    els.dashboardMatchHistory.innerHTML = '<div class="empty-hint">No matches recorded yet</div>';
+    return;
+  }
+  var recent = sortedMatches().slice(0, 10);
+  els.dashboardMatchHistory.innerHTML = recent.map(function(m){ return buildMatchItemHtml(m, false); }).join('') +
+    (state.matches.length > 10 ? '<p class="cap-note" style="text-align:center;">Showing the 10 most recent — see the Matches tab for full history.</p>' : '');
 }
 
 /* ================= render: rewards ================= */
@@ -1998,41 +1999,6 @@ function importAllData(file){
   reader.readAsText(file);
 }
 
-/* ---- per-section export/import (players / matches / subscriptions individually) ---- */
-var SECTION_LABELS = { players: 'players', matches: 'matches', subscriptions: 'payment records' };
-function exportSection(section){
-  var payload = {
-    exportedAt: new Date().toISOString(),
-    app: 'Table Tennis Playground',
-    section: section,
-    data: state[section]
-  };
-  var ok = downloadFile('ttplayground_' + section + '_' + todayISO() + '.json', JSON.stringify(payload, null, 2), 'application/json');
-  if(ok) showToast('Exported ' + SECTION_LABELS[section]);
-}
-function importSection(section, file){
-  var reader = new FileReader();
-  reader.onload = async function(){
-    try{
-      var parsed = JSON.parse(reader.result);
-      var data = Array.isArray(parsed) ? parsed : parsed.data;
-      if(!Array.isArray(data)){
-        showToast('That file doesn\u2019t look like a valid ' + SECTION_LABELS[section] + ' export');
-        return;
-      }
-      if(!window.confirm('Import will replace all current ' + SECTION_LABELS[section] + '. Continue?')) return;
-      state[section] = data;
-      renderAll();
-      showToast('Imported ' + SECTION_LABELS[section]);
-      await syncAfterChange();
-    }catch(e){
-      showToast('Couldn\u2019t read that file — is it valid JSON?');
-    }
-  };
-  reader.onerror = function(){ showToast('Failed to read the file'); };
-  reader.readAsText(file);
-}
-
 /* ================= cloud sync (Google Sheet via Apps Script) ================= */
 function setSyncStatus(msg, kind){
   if(!els.syncStatus) return;
@@ -2122,32 +2088,52 @@ async function syncTest(){
     setSyncStatus('Connection failed: ' + describeNetworkError(err), 'err');
   }
 }
-async function syncPush(silent){
-  if(!syncConfigured()){ if(!silent) setSyncStatus('Not connected.', 'err'); return false; }
-  if(syncInFlight) return false;
-  syncInFlight = true;
-  if(!silent) setSyncStatus('Syncing to Sheet…', 'idle');
-  try{
-    var res = await fetch(syncConfig.url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids a CORS preflight against Apps Script
-      body: JSON.stringify(buildSyncPayload())
-    });
-    var data = await safeJson(res);
-    syncInFlight = false;
-    if(data && data.ok){
-      setSyncStatus('Last synced to Sheet at ' + new Date(data.syncedAt || Date.now()).toLocaleTimeString() + '.', 'ok');
-      updateSyncMeta({ sheetUpdatedIso: data.lastUpdated || data.syncedAt, retrieved: true });
-      return true;
-    } else {
-      setSyncStatus('Sync failed: ' + (data && data.error ? data.error : 'unexpected response'), 'err');
-      return false;
-    }
-  }catch(err){
-    syncInFlight = false;
-    setSyncStatus('Sync failed: ' + describeNetworkError(err), 'err');
-    return false;
+var currentPushPromise = null;
+var pushRequestedWhileRunning = false;
+/** All callers share one in-flight push. If a change arrives while a push is
+    already running, we don't drop it and we don't fire a separate untracked
+    request either — the running push loops once more (picking up the very
+    latest state) before resolving, and every caller — whether they started it
+    or joined partway through — awaits that same final, true outcome. This is
+    what guarantees a change is never silently left out of the Sheet. */
+function syncPush(silent){
+  if(!syncConfigured()){
+    if(!silent) setSyncStatus('Not connected.', 'err');
+    return Promise.resolve(false);
   }
+  if(currentPushPromise){
+    pushRequestedWhileRunning = true;
+    return currentPushPromise;
+  }
+  currentPushPromise = (async function runPush(){
+    var finalOk = false;
+    do{
+      pushRequestedWhileRunning = false;
+      if(!silent) setSyncStatus('Syncing to Sheet…', 'idle');
+      try{
+        var res = await fetch(syncConfig.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids a CORS preflight against Apps Script
+          body: JSON.stringify(buildSyncPayload())
+        });
+        var data = await safeJson(res);
+        if(data && data.ok){
+          setSyncStatus('Last synced to Sheet at ' + new Date(data.syncedAt || Date.now()).toLocaleTimeString() + '.', 'ok');
+          updateSyncMeta({ sheetUpdatedIso: data.lastUpdated || data.syncedAt, retrieved: true });
+          finalOk = true;
+        } else {
+          setSyncStatus('Sync failed: ' + (data && data.error ? data.error : 'unexpected response'), 'err');
+          finalOk = false;
+        }
+      }catch(err){
+        setSyncStatus('Sync failed: ' + describeNetworkError(err), 'err');
+        finalOk = false;
+      }
+    } while(pushRequestedWhileRunning);
+    currentPushPromise = null;
+    return finalOk;
+  })();
+  return currentPushPromise;
 }
 async function syncFetchRemote(){
   var url = syncConfig.url + (syncConfig.url.indexOf('?') > -1 ? '&' : '?') + 'token=' + encodeURIComponent(syncConfig.token);
@@ -2344,6 +2330,9 @@ function leaveFullscreen(){
 
 /* ================= tabs ================= */
 function switchTab(tab){
+  if(tab === 'admin' && !unlocked){
+    tab = 'dashboard'; // Admin is never reachable while locked, even if something tried to navigate there directly
+  }
   currentTab = tab;
   document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === tab); });
   document.querySelectorAll('.tab-panel').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + tab); });
@@ -2354,8 +2343,8 @@ function switchTab(tab){
 
 /* ================= init ================= */
 function init(){
-  var ids = ['lockBtn','lockCountdown','infoBtn','fullscreenBtn','dashMonth','activeScopeChips','resetFilters','dashSearch',
-    'spotlightMonth','spotlightOverall','spotlightActive','lbOverall','lbSingles','lbDoubles',
+  var ids = ['lockBtn','lockCountdown','adminTabBtn','infoBtn','fullscreenBtn','dashMonth','activeScopeChips','resetFilters','dashSearch',
+    'spotlightMonth','spotlightOverall','spotlightActive','lbOverall','lbSingles','lbDoubles','dashboardMatchHistory',
     'newPlayerName','newPlayerCenter','addPlayerBtn','playerList','matchEligibilityNote',
     'matchTypeSeg','singlesFields','doublesFields','singlesA','singlesB',
     'doublesA1','doublesA2','doublesB1','doublesB2','sessionType','sessionLocation','matchComments',
@@ -2364,9 +2353,6 @@ function init(){
     'pinModal','pinInput','pinError','pinSubmit','pinCancel',
     'subStatusList','subPlayer','subMonth','subAmount','subPaidDate','subSaveBtn','subFormReset','subHistory',
     'exportBtn','importBtn','importFile',
-    'exportPlayersBtn','importPlayersBtn','importPlayersFile',
-    'exportMatchesBtn','importMatchesBtn','importMatchesFile',
-    'exportSubsBtn','importSubsBtn','importSubsFile',
     'editPlayerModal','editPlayerName','editPlayerCenter','editPlayerJoined','editPlayerSave','editPlayerCancel',
     'editMatchModal','editMatchSessionType','editMatchLocation','editMatchDate','editMatchComments','editWinnerOptions',
     'editMatchSave','editMatchCancel',
@@ -2540,20 +2526,6 @@ function init(){
     if(file) importAllData(file);
     els.importFile.value = '';
   });
-
-  // export / import (PIN-gated) — per-section
-  function wireSectionIO(section, exportBtnEl, importBtnEl, importFileEl){
-    exportBtnEl.addEventListener('click', function(){ requireAuth(function(){ exportSection(section); }); });
-    importBtnEl.addEventListener('click', function(){ requireAuth(function(){ importFileEl.click(); }); });
-    importFileEl.addEventListener('change', function(){
-      var file = importFileEl.files && importFileEl.files[0];
-      if(file) importSection(section, file);
-      importFileEl.value = '';
-    });
-  }
-  wireSectionIO('players', els.exportPlayersBtn, els.importPlayersBtn, els.importPlayersFile);
-  wireSectionIO('matches', els.exportMatchesBtn, els.importMatchesBtn, els.importMatchesFile);
-  wireSectionIO('subscriptions', els.exportSubsBtn, els.importSubsBtn, els.importSubsFile);
 
   // cloud sync (PIN-gated)
   els.syncTestBtn.addEventListener('click', function(){ requireAuth(syncTest); });
