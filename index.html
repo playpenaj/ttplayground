@@ -6,6 +6,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TT Playground">
+<meta name="application-name" content="Table Tennis Playground">
+<meta name="description" content="Community table tennis league — players, matches, points, and rewards.">
+<meta property="og:title" content="Table Tennis Playground">
+<meta property="og:description" content="Community table tennis league — players, matches, points, and rewards.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0D1B2A">
 <title>Table Tennis Playground</title>
 <style>
   :root{
@@ -52,6 +59,14 @@
     display:flex; align-items:center; gap:5px; white-space:nowrap;
   }
   .icon-btn:active{ transform:scale(.96); }
+
+  /* ---------- sheet freshness status bar (visible to every visitor) ---------- */
+  .sheet-status-bar{
+    padding: 6px 18px; font-size:11px; color:var(--text-lo); text-align:center;
+    background: var(--panel); border-bottom:1px solid var(--line); flex-shrink:0;
+  }
+  .sheet-status-bar.ok{ color: var(--green); }
+  .sheet-status-bar.err{ color: var(--red); }
 
   /* ---------- tabs ---------- */
   nav.tabs{
@@ -335,6 +350,10 @@
     </div>
   </header>
 
+  <div class="sheet-status-bar" id="sheetStatusBar">
+    <span id="sheetStatusText">☁️ Connecting…</span>
+  </div>
+
   <nav class="tabs">
     <button class="tab-btn active" data-tab="dashboard" type="button">📊 Dashboard</button>
     <button class="tab-btn" data-tab="players" type="button">👥 Players</button>
@@ -607,58 +626,19 @@
         </div>
       </div>
 
-      <h2 class="section-title">☁️ Cloud Sync (Google Sheet)</h2>
+      <h2 class="section-title">☁️ Google Sheet Status</h2>
       <div class="card">
         <p style="color:var(--text-lo); font-size:13px; margin-top:0;">
-          Connect this app to a Google Sheet (via a small Apps Script you deploy once) so all data
-          survives even when this page is hosted as a static file, e.g. on GitHub Pages. The Web App
-          URL and secret token you enter below are saved in <b>this browser's</b> local storage.
-          Every add, edit, or delete is pushed to the Sheet immediately, and the app pulls the latest
-          data from the Sheet automatically every time it's opened.
+          This app is connected to a Google Sheet — the connection details are built into the code,
+          nothing to enter here. Every add, edit, or delete is pushed to the Sheet immediately, and
+          the latest Sheet data loads automatically every time this page is opened or refreshed, for
+          every visitor, not just admins.
         </p>
-        <div class="form-grid">
-          <div class="form-field">
-            <label>Apps Script Web App URL</label>
-            <input type="text" id="syncUrl" placeholder="https://script.google.com/macros/s/…/exec">
-          </div>
-          <div class="form-field">
-            <label>Secret token</label>
-            <input type="password" id="syncToken" placeholder="Matches SECRET_TOKEN in the script">
-          </div>
-        </div>
         <div class="btn-row">
-          <button class="btn btn-primary" id="syncSaveBtn" type="button">Save settings</button>
           <button class="btn btn-outline" id="syncTestBtn" type="button">Test connection</button>
+          <button class="btn btn-primary" id="syncReconcileBtn" type="button">🔄 Sync (fill in anything missing)</button>
         </div>
-        <div class="btn-row">
-          <button class="btn btn-outline" id="syncPushBtn" type="button">⇧ Sync to Sheet</button>
-          <button class="btn btn-outline" id="syncPullBtn" type="button">⇩ Load from Sheet</button>
-        </div>
-        <div class="sync-status idle" id="syncStatus">Not connected — paste your Web App URL and token above, then Save settings.</div>
-      </div>
-
-      <h2 class="section-title">Embed Sheet config in this file</h2>
-      <div class="card">
-        <p style="color:var(--text-lo); font-size:13px; margin-top:0;">
-          Optional. By default the URL and token above live only in your browser, so a visitor
-          opening your GitHub Pages link for the first time starts with no data until you share it
-          some other way. This generates a scrambled copy of your current URL + token that you can
-          paste into the HTML file itself, so <b>every</b> visitor automatically loads the latest
-          Sheet data on open. <b>Read this first:</b> scrambling is not real security — anyone who
-          views your page source and puts in a little effort can recover the original URL and token
-          from it, which would let them read <i>and write</i> your Sheet directly, bypassing the PIN
-          entirely. Only do this if you're comfortable with that Web App effectively being public.
-        </p>
-        <div class="btn-row">
-          <button class="btn btn-outline" id="embedGenBtn" type="button">Generate embed string</button>
-        </div>
-        <textarea class="embed-output" id="embedOutput" readonly rows="3" placeholder="Click Generate to create your embed string…"></textarea>
-        <p class="cap-note" id="embedInstructions" style="display:none;">
-          Copy the string above. Near the top of the HTML file's &lt;script&gt; section (search for
-          <code>EMBEDDED_SYNC</code> — there's only one line assigning it), change its
-          <code>enabled</code> value to <code>true</code> and set its <code>data</code> field to the
-          copied string. Save, then re-upload index.html to GitHub.
-        </p>
+        <div class="sync-status idle" id="syncStatus">Checking connection…</div>
       </div>
     </section>
 
@@ -696,10 +676,14 @@
           </div>
         </div>
         <div class="info-item">
-          <div class="ic">🔗</div>
+          <div class="ic">🔧</div>
           <div class="txt">
-            <h3>Connecting for the first time</h3>
-            <p>The first time an admin PIN is entered on a browser with no Sheet connected yet, the app asks for the Web App URL and secret token before continuing — this can be skipped and set up later from the Admin tab.</p>
+            <h3>"Connection failed" or "Load failed"?</h3>
+            <p>This means the app couldn't reach the Google Sheet at all. Check, in order:</p>
+            <p>1. In the Apps Script editor: Deploy → Manage deployments → the deployment's "Who has access" must say <b>Anyone</b> (not "Anyone with Google account").<br>
+               2. If the script code was edited after the first deployment, you must deploy a <b>new version</b> of the <i>same</i> deployment (Manage deployments → edit → Version: New version → Deploy) — creating a brand-new deployment instead gives a different URL, which won't match what's built into this app.<br>
+               3. The URL must end in <code>/exec</code>, not <code>/dev</code>.<br>
+               4. Paste the URL plus <code>?token=YOUR_TOKEN</code> directly into a browser tab — it should show raw text starting with <code>{"ok":true</code>. If it shows a Google sign-in page instead, access isn't set to Anyone yet.</p>
           </div>
         </div>
         <div class="info-item">
@@ -824,26 +808,6 @@
     </div>
     <button class="close-btn" id="pinCancel" type="button">Cancel</button>
     <div class="pin-hint">Unlocks admin actions for 5 minutes. 5 wrong attempts locks the PIN for 30 minutes. The PIN is checked against a one-way hash — the code never contains the PIN itself.</div>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="syncSetupModal">
-  <div class="modal">
-    <h2>Connect Google Sheet</h2>
-    <p class="sub">No Sheet is connected yet on this browser. Enter the Web App URL and secret token from your Apps Script deployment to continue.</p>
-    <div class="form-field" style="margin-bottom:10px;">
-      <label>Apps Script Web App URL</label>
-      <input type="text" id="syncSetupUrl" placeholder="https://script.google.com/macros/s/…/exec">
-    </div>
-    <div class="form-field">
-      <label>Secret token</label>
-      <input type="password" id="syncSetupToken" placeholder="Matches SECRET_TOKEN in the script">
-    </div>
-    <div class="pin-error" id="syncSetupError">Couldn't connect — check the URL and token.</div>
-    <div class="btn-row">
-      <button class="btn btn-primary" id="syncSetupSave" type="button" style="flex:1;">Connect &amp; continue</button>
-    </div>
-    <button class="close-btn" id="syncSetupSkip" type="button">Skip for now</button>
   </div>
 </div>
 
@@ -976,7 +940,7 @@ var SYNC_CONFIG_KEY = 'ttPlayground_sync_config_v1';
 // Paste a generated string here (Admin tab > Embed Sheet config) and set enabled:true
 // to make every fresh visitor auto-connect to your Sheet. Leave enabled:false to keep
 // the URL/token purely local to whichever browser configures them via the Admin tab.
-var EMBEDDED_SYNC = { enabled: false, data: '' };
+var EMBEDDED_SYNC = { enabled: true, data: 'L3YlHg1bXVAHARoUNldNShc8BFgvMEEpABs0BARcBiYLfx8IFRMbFnsnfy0qHx4RDQIjDgAcOhAKblscLHEbLAkuPF4OBywTIDsdETsKOCExOwk5CQpWFxpEBTMBCRRSLgs8Bzt3DXoZWSIeVBAJGxUoNUYTGREGdnhyGA4SAhxNT0wwJA8OADA6GF82Nz8iDg00Gg4HCy0nIAJLCw==' };
 var EMBED_XOR_KEY = 'TTPlaygroundEmbed_v1_DoNotShareIfPrivate';
 
 function xorCipher_(str, key){
@@ -1016,6 +980,40 @@ if(!syncConfig.url && EMBEDDED_SYNC.enabled && EMBEDDED_SYNC.data){
 }
 var syncInFlight = false;
 var initialLoadDone = false;
+
+/* ---- freshness tracking: last write recorded in the Sheet, last time THIS
+   browser successfully fetched from it. Shown to every visitor, admin or not. ---- */
+var SYNC_META_KEY = 'ttPlayground_sync_meta_v1';
+function loadSyncMeta(){
+  try{
+    var raw = localStorage.getItem(SYNC_META_KEY);
+    if(raw){ var parsed = JSON.parse(raw); if(parsed) return parsed; }
+  }catch(e){ /* ignore */ }
+  return { lastSheetUpdated: null, lastRetrievedAt: null };
+}
+function saveSyncMeta(){
+  try{ localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta)); }catch(e){ /* ignore */ }
+}
+var syncMeta = loadSyncMeta();
+function timeAgo(ts){
+  if(!ts) return 'never';
+  var diff = Date.now() - ts;
+  if(diff < 0) diff = 0;
+  var sec = Math.floor(diff / 1000);
+  if(sec < 10) return 'just now';
+  if(sec < 60) return sec + 's ago';
+  var min = Math.floor(sec / 60);
+  if(min < 60) return min + 'm ago';
+  var hr = Math.floor(min / 60);
+  if(hr < 24) return hr + 'h ago';
+  var day = Math.floor(hr / 24);
+  return day + 'd ago';
+}
+function isoToMs(iso){
+  if(!iso) return null;
+  var t = new Date(iso).getTime();
+  return isNaN(t) ? null : t;
+}
 
 /* ================= helpers ================= */
 function byId(id){ return document.getElementById(id); }
@@ -1207,11 +1205,7 @@ async function submitPin(){
     var action = pendingPinAction;
     closePinModal();
     showToast('Admin unlocked for 5 minutes');
-    if(syncConfigured()){
-      if(action) action();
-    } else {
-      openSyncSetupModal(action);
-    }
+    if(action) action();
   } else {
     security.failedAttempts = (security.failedAttempts || 0) + 1;
     if(security.failedAttempts >= MAX_PIN_ATTEMPTS){
@@ -2056,35 +2050,80 @@ function buildSyncPayload(){
     subscriptions: state.subscriptions
   };
 }
-function saveSyncSettings(){
-  syncConfig.url = els.syncUrl.value.trim();
-  syncConfig.token = els.syncToken.value.trim();
-  saveSyncConfigToStorage();
-  if(syncConfigured()){
-    setSyncStatus('Settings saved. Use "Test connection" to verify it works.', 'idle');
-  } else {
-    setSyncStatus('Not connected — paste your Web App URL and token above, then Save settings.', 'idle');
+var syncLastAttemptFailed = false;
+function renderSheetStatusBar(){
+  if(!els.sheetStatusBar) return;
+  if(!syncConfigured()){
+    els.sheetStatusBar.className = 'sheet-status-bar err';
+    els.sheetStatusText.textContent = '⚠️ Not connected to a Google Sheet';
+    return;
   }
-  showToast('Sync settings saved');
+  if(syncLastAttemptFailed){
+    els.sheetStatusBar.className = 'sheet-status-bar err';
+    els.sheetStatusText.textContent =
+      '⚠️ Could not reach Sheet just now — showing last known data (updated ' + timeAgo(syncMeta.lastSheetUpdated) + ')';
+    return;
+  }
+  els.sheetStatusBar.className = 'sheet-status-bar ok';
+  els.sheetStatusText.textContent =
+    '☁️ Sheet updated ' + timeAgo(syncMeta.lastSheetUpdated) +
+    '  ·  Last checked ' + timeAgo(syncMeta.lastRetrievedAt);
+}
+function updateSyncMeta(opts){
+  opts = opts || {};
+  if(opts.sheetUpdatedIso !== undefined){
+    var ms = isoToMs(opts.sheetUpdatedIso);
+    if(ms) syncMeta.lastSheetUpdated = ms;
+  }
+  if(opts.retrieved){
+    syncMeta.lastRetrievedAt = Date.now();
+    syncLastAttemptFailed = false;
+  }
+  saveSyncMeta();
+  renderSheetStatusBar();
+}
+/** Parses a fetch Response as JSON, but never throws — an Apps Script
+    deployment problem (wrong access setting, stale URL, quota, etc.) often
+    comes back as an HTML error page rather than JSON, which would otherwise
+    surface as a confusing raw parse error. */
+async function safeJson(res){
+  try{
+    return await res.json();
+  }catch(e){
+    return { ok: false, error: 'The Sheet returned an unexpected (non-JSON) response' };
+  }
+}
+/** Turns a raw fetch/network error into an actionable message. Browsers word
+    this differently — Chrome says "Failed to fetch", Safari says "Load failed" —
+    but both mean the request never got a real response at all, which for an
+    Apps Script Web App almost always means one of: the deployment's access
+    isn't set to "Anyone", the URL points at an old deployment that no longer
+    exists (creating a brand-new deployment gives a NEW url — editing an
+    existing one and picking "New version" keeps the same url), or there's no
+    network connection right now. */
+function describeNetworkError(err){
+  var raw = (err && err.message) ? err.message : 'network error';
+  return raw + ' — this usually means the Apps Script deployment access isn\u2019t set to "Anyone", or the URL is from an old/different deployment. See the Info tab for the checklist.';
 }
 async function syncTest(){
-  if(!syncConfigured()){ setSyncStatus('Enter a URL and token first, then Save settings.', 'err'); return; }
+  if(!syncConfigured()){ setSyncStatus('Not connected.', 'err'); return; }
   setSyncStatus('Testing connection…', 'idle');
   try{
     var url = syncConfig.url + (syncConfig.url.indexOf('?') > -1 ? '&' : '?') + 'token=' + encodeURIComponent(syncConfig.token);
     var res = await fetch(url, { method: 'GET' });
-    var data = await res.json();
+    var data = await safeJson(res);
     if(data && data.ok){
       setSyncStatus('Connected — sheet has ' + (data.players||[]).length + ' players, ' + (data.matches||[]).length + ' matches, ' + (data.subscriptions||[]).length + ' payments.', 'ok');
+      updateSyncMeta({ sheetUpdatedIso: data.lastUpdated, retrieved: true });
     } else {
       setSyncStatus('Connection failed: ' + (data && data.error ? data.error : 'unexpected response'), 'err');
     }
   }catch(err){
-    setSyncStatus('Connection failed: ' + (err && err.message ? err.message : 'network error'), 'err');
+    setSyncStatus('Connection failed: ' + describeNetworkError(err), 'err');
   }
 }
 async function syncPush(silent){
-  if(!syncConfigured()){ if(!silent) setSyncStatus('Enter a URL and token first, then Save settings.', 'err'); return false; }
+  if(!syncConfigured()){ if(!silent) setSyncStatus('Not connected.', 'err'); return false; }
   if(syncInFlight) return false;
   syncInFlight = true;
   if(!silent) setSyncStatus('Syncing to Sheet…', 'idle');
@@ -2094,10 +2133,11 @@ async function syncPush(silent){
       headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids a CORS preflight against Apps Script
       body: JSON.stringify(buildSyncPayload())
     });
-    var data = await res.json();
+    var data = await safeJson(res);
     syncInFlight = false;
     if(data && data.ok){
       setSyncStatus('Last synced to Sheet at ' + new Date(data.syncedAt || Date.now()).toLocaleTimeString() + '.', 'ok');
+      updateSyncMeta({ sheetUpdatedIso: data.lastUpdated || data.syncedAt, retrieved: true });
       return true;
     } else {
       setSyncStatus('Sync failed: ' + (data && data.error ? data.error : 'unexpected response'), 'err');
@@ -2105,79 +2145,79 @@ async function syncPush(silent){
     }
   }catch(err){
     syncInFlight = false;
-    setSyncStatus('Sync failed: ' + (err && err.message ? err.message : 'network error'), 'err');
+    setSyncStatus('Sync failed: ' + describeNetworkError(err), 'err');
     return false;
   }
 }
-async function syncPull(){
-  if(!syncConfigured()){ setSyncStatus('Enter a URL and token first, then Save settings.', 'err'); return; }
-  setSyncStatus('Loading from Sheet…', 'idle');
+async function syncFetchRemote(){
+  var url = syncConfig.url + (syncConfig.url.indexOf('?') > -1 ? '&' : '?') + 'token=' + encodeURIComponent(syncConfig.token);
+  var res = await fetch(url, { method: 'GET' });
+  return await safeJson(res);
+}
+function mergeById(localArr, remoteArr){
+  var map = {};
+  (remoteArr || []).forEach(function(r){ if(r && r.id) map[r.id] = r; });
+  (localArr || []).forEach(function(l){ if(l && l.id) map[l.id] = l; }); // local wins on matching id
+  return Object.keys(map).map(function(k){ return map[k]; });
+}
+/** The one "Sync" button: fills in anything missing on either side, in both
+    directions, without needing separate push/pull actions. Records that exist
+    only locally get added to the Sheet; records that exist only in the Sheet
+    get added locally. Matching IDs on both sides are left as the local copy. */
+async function syncReconcile(){
+  if(!syncConfigured()){ setSyncStatus('Not connected.', 'err'); return; }
+  showSyncOverlay('Syncing with Google Sheet…');
   try{
-    var url = syncConfig.url + (syncConfig.url.indexOf('?') > -1 ? '&' : '?') + 'token=' + encodeURIComponent(syncConfig.token);
-    var res = await fetch(url, { method: 'GET' });
-    var data = await res.json();
+    var data = await syncFetchRemote();
     if(!data || !data.ok){
-      setSyncStatus('Load failed: ' + (data && data.error ? data.error : 'unexpected response'), 'err');
+      hideSyncOverlay();
+      setSyncStatus('Sync failed: ' + (data && data.error ? data.error : 'unexpected response'), 'err');
       return;
     }
-    if(!window.confirm('This will replace all local data with what\u2019s in the Sheet. Continue?')) return;
-    state = {
-      players: Array.isArray(data.players) ? data.players : [],
-      matches: Array.isArray(data.matches) ? data.matches : [],
-      subscriptions: Array.isArray(data.subscriptions) ? data.subscriptions : []
-    };
-    renderAll();
-    setSyncStatus('Loaded from Sheet at ' + new Date().toLocaleTimeString() + '.', 'ok');
-    showToast('Data loaded from Google Sheet');
-  }catch(err){
-    setSyncStatus('Load failed: ' + (err && err.message ? err.message : 'network error'), 'err');
-  }
-}
-var pendingSyncSetupAction = null;
-function openSyncSetupModal(actionAfter){
-  pendingSyncSetupAction = actionAfter || null;
-  els.syncSetupUrl.value = syncConfig.url || '';
-  els.syncSetupToken.value = syncConfig.token || '';
-  els.syncSetupError.style.display = 'none';
-  els.syncSetupModal.classList.add('open');
-}
-function closeSyncSetupModal(){
-  els.syncSetupModal.classList.remove('open');
-  pendingSyncSetupAction = null;
-}
-async function saveSyncSetupAndContinue(){
-  var url = els.syncSetupUrl.value.trim();
-  var token = els.syncSetupToken.value.trim();
-  if(!url || !token){
-    els.syncSetupError.style.display = 'block';
-    els.syncSetupError.textContent = 'Enter both the Web App URL and the token.';
-    return;
-  }
-  syncConfig.url = url;
-  syncConfig.token = token;
-  saveSyncConfigToStorage();
-  els.syncUrl.value = url;
-  els.syncToken.value = token;
-  var action = pendingSyncSetupAction;
-  closeSyncSetupModal();
-  setSyncStatus('Settings saved. Use "Test connection" to verify it works.', 'idle');
-  showToast('Google Sheet connected');
-  if(action) action();
-}
-function skipSyncSetup(){
-  var action = pendingSyncSetupAction;
-  closeSyncSetupModal();
-  if(action) action();
-}
+    updateSyncMeta({ sheetUpdatedIso: data.lastUpdated, retrieved: true });
 
+    var beforeCounts = { players: state.players.length, matches: state.matches.length, subscriptions: state.subscriptions.length };
+    state = {
+      players: mergeById(state.players, data.players),
+      matches: mergeById(state.matches, data.matches),
+      subscriptions: mergeById(state.subscriptions, data.subscriptions)
+    };
+    var addedLocally =
+      (state.players.length - beforeCounts.players) +
+      (state.matches.length - beforeCounts.matches) +
+      (state.subscriptions.length - beforeCounts.subscriptions);
+
+    renderAll();
+
+    var pushOk = await syncPush(true);
+    hideSyncOverlay();
+    if(pushOk){
+      showToast('✓ Synced — app and Sheet now match' + (addedLocally > 0 ? ' (' + addedLocally + ' record' + (addedLocally===1?'':'s') + ' pulled in)' : ''));
+    } else {
+      showToast('Pulled missing data locally, but couldn\u2019t push back to the Sheet — try again shortly');
+    }
+  }catch(err){
+    hideSyncOverlay();
+    setSyncStatus('Sync failed: ' + (err && err.message ? err.message : 'network error'), 'err');
+  }
+}
+// Reference-counted: if two sync operations overlap (e.g. the launch-time auto-pull
+// is still running when a change triggers its own sync), the overlay must stay up
+// until BOTH finish — otherwise whichever resolves first would prematurely "unfreeze"
+// the screen while the other is still genuinely in flight.
+var syncOverlayRefCount = 0;
 function showSyncOverlay(text){
+  syncOverlayRefCount++;
   if(!els.syncOverlay) return;
   els.syncOverlayText.textContent = text || 'Saving changes…';
   els.syncOverlay.classList.add('show');
 }
 function hideSyncOverlay(){
+  syncOverlayRefCount = Math.max(0, syncOverlayRefCount - 1);
   if(!els.syncOverlay) return;
-  els.syncOverlay.classList.remove('show');
+  if(syncOverlayRefCount === 0){
+    els.syncOverlay.classList.remove('show');
+  }
 }
 /** Call right after any create/edit/delete of a player, match, or payment.
     If a Sheet is connected, pushes immediately and blocks the UI with a
@@ -2197,12 +2237,10 @@ async function syncAfterChange(){
     sees the latest Sheet data without needing to click anything. No PIN needed —
     reading data is not an admin action. Silently keeps local data if it fails. */
 async function autoPullOnLaunch(){
-  if(!syncConfigured()) return;
+  if(!syncConfigured()){ renderSheetStatusBar(); return; }
   showSyncOverlay('Loading latest data…');
   try{
-    var url = syncConfig.url + (syncConfig.url.indexOf('?') > -1 ? '&' : '?') + 'token=' + encodeURIComponent(syncConfig.token);
-    var res = await fetch(url, { method: 'GET' });
-    var data = await res.json();
+    var data = await syncFetchRemote();
     if(data && data.ok){
       state = {
         players: Array.isArray(data.players) ? data.players : [],
@@ -2211,24 +2249,18 @@ async function autoPullOnLaunch(){
       };
       renderAll();
       setSyncStatus('Loaded latest data from Sheet at ' + new Date().toLocaleTimeString() + '.', 'ok');
+      updateSyncMeta({ sheetUpdatedIso: data.lastUpdated, retrieved: true });
     } else {
-      setSyncStatus('Could not load from Sheet — showing locally cached data.', 'err');
+      setSyncStatus('Could not load from Sheet: ' + (data && data.error ? data.error : 'unexpected response') + ' — showing locally cached data.', 'err');
+      syncLastAttemptFailed = true;
+      renderSheetStatusBar();
     }
   }catch(err){
-    setSyncStatus('Could not reach Sheet — showing locally cached data.', 'err');
+    setSyncStatus('Could not reach Sheet: ' + describeNetworkError(err) + ' — showing locally cached data.', 'err');
+    syncLastAttemptFailed = true;
+    renderSheetStatusBar();
   }
   hideSyncOverlay();
-}
-
-/* ================= embed config generator ================= */
-function generateEmbeddedConfigString(){
-  if(!syncConfigured()){
-    showToast('Save a working URL and token first');
-    return;
-  }
-  var str = encodeEmbedded({ url: syncConfig.url, token: syncConfig.token });
-  els.embedOutput.value = str;
-  els.embedInstructions.style.display = 'block';
 }
 
 /* ================= dummy seed data ================= */
@@ -2338,9 +2370,8 @@ function init(){
     'editPlayerModal','editPlayerName','editPlayerCenter','editPlayerJoined','editPlayerSave','editPlayerCancel',
     'editMatchModal','editMatchSessionType','editMatchLocation','editMatchDate','editMatchComments','editWinnerOptions',
     'editMatchSave','editMatchCancel',
-    'syncUrl','syncToken','syncSaveBtn','syncTestBtn','syncPushBtn','syncPullBtn','syncStatus',
-    'syncSetupModal','syncSetupUrl','syncSetupToken','syncSetupError','syncSetupSave','syncSetupSkip',
-    'syncOverlay','syncOverlayText','embedGenBtn','embedOutput','embedInstructions'];
+    'syncTestBtn','syncReconcileBtn','syncStatus','sheetStatusBar','sheetStatusText',
+    'syncOverlay','syncOverlayText'];
   var missing = [];
   ids.forEach(function(id){ var n = byId(id); if(!n) missing.push(id); els[id] = n; });
   if(missing.length){
@@ -2351,6 +2382,11 @@ function init(){
   var loaded = loadState();
   if(loaded){
     state = loaded;
+  } else if(syncConfigured()){
+    // A Sheet is connected (built into the code or from a prior local setting) — start
+    // empty and let autoPullOnLaunch() populate real data, rather than seeding fictional
+    // demo players that a plain overwrite-refresh could otherwise conflict with.
+    state = { players: [], matches: [], subscriptions: [] };
   } else {
     state = seedDummyData();
   }
@@ -2359,11 +2395,13 @@ function init(){
   els.matchDate.value = todayISO();
   els.subMonth.value = monthISO();
   els.subPaidDate.value = todayISO();
-  els.syncUrl.value = syncConfig.url || '';
-  els.syncToken.value = syncConfig.token || '';
   if(syncConfigured()){
-    setSyncStatus('Settings loaded from this browser. Use "Test connection" to verify it still works.', 'idle');
+    setSyncStatus('Connected. Use "Test connection" to verify it still works.', 'idle');
+  } else {
+    setSyncStatus('Not connected to a Google Sheet.', 'err');
   }
+  renderSheetStatusBar();
+  setInterval(renderSheetStatusBar, 30000); // keep the "X ago" text fresh without re-fetching
 
   initConfetti();
   renderCenterOptions();
@@ -2373,7 +2411,8 @@ function init(){
   updateLockUI();
 
   // Auto-pull the latest Sheet data on every launch/refresh, without requiring the PIN
-  // (reading data is not an admin action — only writes are gated).
+  // (reading data is not an admin action — only writes are gated). Visible to every
+  // visitor via the status bar under the header, not just admins.
   autoPullOnLaunch();
 
   document.querySelectorAll('.tab-btn').forEach(function(btn){
@@ -2457,15 +2496,6 @@ function init(){
   els.pinCancel.addEventListener('click', closePinModal);
   els.pinModal.addEventListener('click', function(e){ if(e.target === els.pinModal) closePinModal(); });
 
-  // sync setup modal (chained after PIN when no Sheet is connected yet)
-  els.syncSetupSave.addEventListener('click', saveSyncSetupAndContinue);
-  els.syncSetupToken.addEventListener('keydown', function(e){ if(e.key === 'Enter') saveSyncSetupAndContinue(); });
-  els.syncSetupSkip.addEventListener('click', skipSyncSetup);
-  els.syncSetupModal.addEventListener('click', function(e){ if(e.target === els.syncSetupModal) skipSyncSetup(); });
-
-  // embed config generator
-  els.embedGenBtn.addEventListener('click', function(){ requireAuth(generateEmbeddedConfigString); });
-
   // subscriptions (PIN-gated)
   els.subSaveBtn.addEventListener('click', function(){ requireAuth(saveSubscriptionFromForm); });
   els.subFormReset.addEventListener('click', cancelEditSubscription);
@@ -2526,10 +2556,8 @@ function init(){
   wireSectionIO('subscriptions', els.exportSubsBtn, els.importSubsBtn, els.importSubsFile);
 
   // cloud sync (PIN-gated)
-  els.syncSaveBtn.addEventListener('click', function(){ requireAuth(saveSyncSettings); });
   els.syncTestBtn.addEventListener('click', function(){ requireAuth(syncTest); });
-  els.syncPushBtn.addEventListener('click', function(){ requireAuth(function(){ syncPush(false); }); });
-  els.syncPullBtn.addEventListener('click', function(){ requireAuth(syncPull); });
+  els.syncReconcileBtn.addEventListener('click', function(){ requireAuth(syncReconcile); });
 
   els.fullscreenBtn.addEventListener('click', function(){
     isFullscreen() ? leaveFullscreen() : goFullscreen();
