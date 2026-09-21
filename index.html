@@ -321,15 +321,44 @@
   /* ---------- blocking sync overlay ---------- */
   .sync-overlay{
     position:fixed; inset:0; background: rgba(6,12,20,.82); z-index:200;
-    display:none; align-items:center; justify-content:center; flex-direction:column; gap:16px;
+    display:none; align-items:center; justify-content:center; flex-direction:column; gap:18px;
   }
   .sync-overlay.show{ display:flex; }
-  .sync-spinner{
-    width:44px; height:44px; border-radius:50%; border:4px solid var(--line);
-    border-top-color: var(--orange); animation: spin 0.8s linear infinite;
+
+  /* table-tennis rally loading animation: a ball volleying between two paddles */
+  .pingpong-loader{ position:relative; width:150px; height:64px; }
+  .pingpong-loader .paddle{
+    position:absolute; top:50%; margin-top:-18px; font-size:32px; line-height:1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.4));
   }
-  @keyframes spin{ to{ transform: rotate(360deg); } }
-  .sync-overlay-text{ color: var(--text-hi); font-weight:700; font-size:14px; }
+  .pingpong-loader .paddle.left{ left:0; transform: scaleX(-1); animation: paddle-swing-left 1.1s ease-in-out infinite; }
+  .pingpong-loader .paddle.right{ right:0; animation: paddle-swing-right 1.1s ease-in-out infinite; }
+  .pingpong-loader .ball{
+    position:absolute; width:13px; height:13px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #fff, var(--ball-orange) 70%);
+    box-shadow: 0 0 8px rgba(255,122,61,.7);
+    animation: ball-rally 1.1s ease-in-out infinite;
+  }
+  .pingpong-loader .net{
+    position:absolute; left:50%; bottom:6px; width:2px; height:20px;
+    background: var(--line); transform: translateX(-50%);
+  }
+  @keyframes ball-rally{
+    0%   { left:30px;  top:36px; transform: scale(1); }
+    22%  { left:66px;  top:8px;  transform: scale(1.08); }
+    50%  { left:105px; top:36px; transform: scale(1); }
+    72%  { left:66px;  top:8px;  transform: scale(1.08); }
+    100% { left:30px;  top:36px; transform: scale(1); }
+  }
+  @keyframes paddle-swing-left{
+    0%, 82%, 100% { transform: scaleX(-1) rotate(0deg); }
+    92% { transform: scaleX(-1) rotate(-22deg); }
+  }
+  @keyframes paddle-swing-right{
+    0%, 32%, 100% { transform: rotate(0deg); }
+    42% { transform: rotate(22deg); }
+  }
+  .sync-overlay-text{ color: var(--text-hi); font-weight:700; font-size:14px; text-align:center; min-height:20px; }
 
   .embed-output{
     width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text-hi);
@@ -435,6 +464,51 @@
     <!-- ================= PLAYERS ================= -->
     <!-- ================= MATCHES ================= -->
     <section class="tab-panel" id="tab-matches">
+      <h2 class="section-title">Match history</h2>
+      <div class="card">
+        <div id="matchHistory"><div class="empty-hint">No matches recorded yet</div></div>
+      </div>
+    </section>
+
+    <!-- ================= REWARDS ================= -->
+    <section class="tab-panel" id="tab-rewards">
+      <h2 class="section-title">Points → discount tiers</h2>
+      <div class="card">
+        <table class="tiers" id="tierTable"></table>
+      </div>
+
+      <h2 class="section-title">Player rewards standing</h2>
+      <div class="card">
+        <div id="rewardsList"><div class="empty-hint">No players yet</div></div>
+      </div>
+    </section>
+
+    <!-- ================= ADMIN ================= -->
+    <section class="tab-panel" id="tab-admin">
+      <h2 class="section-title">Add a player</h2>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Player name</label>
+            <input type="text" id="newPlayerName" placeholder="e.g. Alex Tan" maxlength="40">
+          </div>
+          <div class="form-field">
+            <label>Community center</label>
+            <select id="newPlayerCenter">
+              <option value="">Select community center</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="addPlayerBtn" type="button">+ Add player</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">Roster</h2>
+      <div class="card">
+        <div class="player-list" id="playerList"></div>
+      </div>
+
       <h2 class="section-title">Record a match result</h2>
       <div class="card">
         <p class="cap-note" id="matchEligibilityNote" style="margin-bottom:10px;"></p>
@@ -515,51 +589,6 @@
         </div>
       </div>
 
-      <h2 class="section-title">Match history</h2>
-      <div class="card">
-        <div id="matchHistory"><div class="empty-hint">No matches recorded yet</div></div>
-      </div>
-    </section>
-
-    <!-- ================= REWARDS ================= -->
-    <section class="tab-panel" id="tab-rewards">
-      <h2 class="section-title">Points → discount tiers</h2>
-      <div class="card">
-        <table class="tiers" id="tierTable"></table>
-      </div>
-
-      <h2 class="section-title">Player rewards standing</h2>
-      <div class="card">
-        <div id="rewardsList"><div class="empty-hint">No players yet</div></div>
-      </div>
-    </section>
-
-    <!-- ================= ADMIN ================= -->
-    <section class="tab-panel" id="tab-admin">
-      <h2 class="section-title">Add a player</h2>
-      <div class="card">
-        <div class="form-grid">
-          <div class="form-field">
-            <label>Player name</label>
-            <input type="text" id="newPlayerName" placeholder="e.g. Alex Tan" maxlength="40">
-          </div>
-          <div class="form-field">
-            <label>Community center</label>
-            <select id="newPlayerCenter">
-              <option value="">Select community center</option>
-            </select>
-          </div>
-        </div>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="addPlayerBtn" type="button">+ Add player</button>
-        </div>
-      </div>
-
-      <h2 class="section-title">Roster</h2>
-      <div class="card">
-        <div class="player-list" id="playerList"></div>
-      </div>
-
       <h2 class="section-title">This month's subscription status</h2>
       <div class="card">
         <div id="subStatusList"><div class="empty-hint">No players yet</div></div>
@@ -606,12 +635,12 @@
         </div>
       </div>
 
-      <h2 class="section-title">☁️ Google Sheet Status</h2>
+      <h2 class="section-title">☁️ Cloud Sync Status</h2>
       <div class="card">
         <p style="color:var(--text-lo); font-size:13px; margin-top:0;">
-          This app is connected to a Google Sheet — the connection details are built into the code,
-          nothing to enter here. Every add, edit, or delete is pushed to the Sheet immediately, and
-          the latest Sheet data loads automatically every time this page is opened or refreshed, for
+          This app is connected to a secure server — the connection details are built into the code,
+          nothing to enter here. Every add, edit, or delete is pushed to the server immediately, and
+          the latest data loads automatically every time this page is opened or refreshed, for
           every visitor, not just admins.
         </p>
         <div class="btn-row">
@@ -619,6 +648,15 @@
           <button class="btn btn-primary" id="syncReconcileBtn" type="button">🔄 Sync (fill in anything missing)</button>
         </div>
         <div class="sync-status idle" id="syncStatus">Checking connection…</div>
+
+        <div class="cap-note" style="margin-top:14px; border-top:1px solid var(--line); padding-top:12px;">
+          <b>Admin troubleshooting — "Connection failed" or "Load failed"?</b><br>
+          This means the app couldn't reach the server at all. Check, in order:<br>
+          1. In the Apps Script editor: Deploy → Manage deployments → the deployment's "Who has access" must say <b>Anyone</b> (not "Anyone with Google account").<br>
+          2. If the script code was edited after the first deployment, you must deploy a <b>new version</b> of the <i>same</i> deployment (Manage deployments → edit → Version: New version → Deploy) — creating a brand-new deployment instead gives a different URL, which won't match what's built into this app.<br>
+          3. The URL must end in <code>/exec</code>, not <code>/dev</code>.<br>
+          4. Paste the URL plus <code>?token=YOUR_TOKEN</code> directly into a browser tab — it should show raw text starting with <code>{"ok":true</code>. If it shows a Google sign-in page instead, access isn't set to Anyone yet.
+        </div>
       </div>
     </section>
 
@@ -652,18 +690,7 @@
           <div class="ic">☁️</div>
           <div class="txt">
             <h3>Cloud sync</h3>
-            <p>When a Google Sheet is connected, every add, edit, or delete is pushed to it immediately — the screen briefly shows a "Saving…" indicator until it's confirmed, so you always know a change actually made it to the Sheet before moving on. The app also pulls the latest Sheet data automatically every time it's opened or refreshed, so anyone visiting the page always sees current standings.</p>
-          </div>
-        </div>
-        <div class="info-item">
-          <div class="ic">🔧</div>
-          <div class="txt">
-            <h3>"Connection failed" or "Load failed"?</h3>
-            <p>This means the app couldn't reach the Google Sheet at all. Check, in order:</p>
-            <p>1. In the Apps Script editor: Deploy → Manage deployments → the deployment's "Who has access" must say <b>Anyone</b> (not "Anyone with Google account").<br>
-               2. If the script code was edited after the first deployment, you must deploy a <b>new version</b> of the <i>same</i> deployment (Manage deployments → edit → Version: New version → Deploy) — creating a brand-new deployment instead gives a different URL, which won't match what's built into this app.<br>
-               3. The URL must end in <code>/exec</code>, not <code>/dev</code>.<br>
-               4. Paste the URL plus <code>?token=YOUR_TOKEN</code> directly into a browser tab — it should show raw text starting with <code>{"ok":true</code>. If it shows a Google sign-in page instead, access isn't set to Anyone yet.</p>
+            <p>Every add, edit, or delete is pushed to the server immediately — the screen briefly shows a rally animation until it's confirmed, so you always know a change actually went through before moving on. The app also loads the latest data automatically every time it's opened or refreshed, so anyone visiting the page always sees current standings.</p>
           </div>
         </div>
         <div class="info-item">
@@ -712,7 +739,12 @@
 <div class="toast" id="toast"></div>
 
 <div class="sync-overlay" id="syncOverlay">
-  <div class="sync-spinner"></div>
+  <div class="pingpong-loader">
+    <div class="net"></div>
+    <div class="paddle left">🏓</div>
+    <div class="ball"></div>
+    <div class="paddle right">🏓</div>
+  </div>
   <div class="sync-overlay-text" id="syncOverlayText">Saving changes…</div>
 </div>
 
@@ -1265,7 +1297,10 @@ function tickConfetti(){
       confettiCtx.translate(p.x, p.y);
       confettiCtx.rotate(p.rot * Math.PI/180);
       confettiCtx.fillStyle = p.color;
-      confettiCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+      // small round pieces read as mini ping-pong balls rather than generic confetti squares
+      confettiCtx.beginPath();
+      confettiCtx.arc(0, 0, p.size/2, 0, Math.PI*2);
+      confettiCtx.fill();
       confettiCtx.restore();
       alive.push(p);
     }
@@ -2021,18 +2056,18 @@ function renderSheetStatusBar(){
   if(!els.sheetStatusBar) return;
   if(!syncConfigured()){
     els.sheetStatusBar.className = 'sheet-status-bar err';
-    els.sheetStatusText.textContent = '⚠️ Not connected to a Google Sheet';
+    els.sheetStatusText.textContent = '⚠️ Not connected';
     return;
   }
   if(syncLastAttemptFailed){
     els.sheetStatusBar.className = 'sheet-status-bar err';
     els.sheetStatusText.textContent =
-      '⚠️ Could not reach Sheet just now — showing last known data (updated ' + timeAgo(syncMeta.lastSheetUpdated) + ')';
+      '⚠️ Could not reach the server just now — showing last known data (updated ' + timeAgo(syncMeta.lastSheetUpdated) + ')';
     return;
   }
   els.sheetStatusBar.className = 'sheet-status-bar ok';
   els.sheetStatusText.textContent =
-    '☁️ Sheet updated ' + timeAgo(syncMeta.lastSheetUpdated) +
+    '☁️ Data updated ' + timeAgo(syncMeta.lastSheetUpdated) +
     '  ·  Last checked ' + timeAgo(syncMeta.lastRetrievedAt);
 }
 function updateSyncMeta(opts){
@@ -2056,7 +2091,7 @@ async function safeJson(res){
   try{
     return await res.json();
   }catch(e){
-    return { ok: false, error: 'The Sheet returned an unexpected (non-JSON) response' };
+    return { ok: false, error: 'The server returned an unexpected response' };
   }
 }
 /** Turns a raw fetch/network error into an actionable message. Browsers word
@@ -2069,7 +2104,7 @@ async function safeJson(res){
     network connection right now. */
 function describeNetworkError(err){
   var raw = (err && err.message) ? err.message : 'network error';
-  return raw + ' — this usually means the Apps Script deployment access isn\u2019t set to "Anyone", or the URL is from an old/different deployment. See the Info tab for the checklist.';
+  return raw + ' — see the troubleshooting notes below for how to fix this.';
 }
 async function syncTest(){
   if(!syncConfigured()){ setSyncStatus('Not connected.', 'err'); return; }
@@ -2079,7 +2114,7 @@ async function syncTest(){
     var res = await fetch(url, { method: 'GET' });
     var data = await safeJson(res);
     if(data && data.ok){
-      setSyncStatus('Connected — sheet has ' + (data.players||[]).length + ' players, ' + (data.matches||[]).length + ' matches, ' + (data.subscriptions||[]).length + ' payments.', 'ok');
+      setSyncStatus('Connected — server has ' + (data.players||[]).length + ' players, ' + (data.matches||[]).length + ' matches, ' + (data.subscriptions||[]).length + ' payments.', 'ok');
       updateSyncMeta({ sheetUpdatedIso: data.lastUpdated, retrieved: true });
     } else {
       setSyncStatus('Connection failed: ' + (data && data.error ? data.error : 'unexpected response'), 'err');
@@ -2109,7 +2144,7 @@ function syncPush(silent){
     var finalOk = false;
     do{
       pushRequestedWhileRunning = false;
-      if(!silent) setSyncStatus('Syncing to Sheet…', 'idle');
+      if(!silent) setSyncStatus('Syncing…', 'idle');
       try{
         var res = await fetch(syncConfig.url, {
           method: 'POST',
@@ -2118,7 +2153,7 @@ function syncPush(silent){
         });
         var data = await safeJson(res);
         if(data && data.ok){
-          setSyncStatus('Last synced to Sheet at ' + new Date(data.syncedAt || Date.now()).toLocaleTimeString() + '.', 'ok');
+          setSyncStatus('Last synced at ' + new Date(data.syncedAt || Date.now()).toLocaleTimeString() + '.', 'ok');
           updateSyncMeta({ sheetUpdatedIso: data.lastUpdated || data.syncedAt, retrieved: true });
           finalOk = true;
         } else {
@@ -2152,7 +2187,7 @@ function mergeById(localArr, remoteArr){
     get added locally. Matching IDs on both sides are left as the local copy. */
 async function syncReconcile(){
   if(!syncConfigured()){ setSyncStatus('Not connected.', 'err'); return; }
-  showSyncOverlay('Syncing with Google Sheet…');
+  showSyncOverlay();
   try{
     var data = await syncFetchRemote();
     if(!data || !data.ok){
@@ -2178,9 +2213,9 @@ async function syncReconcile(){
     var pushOk = await syncPush(true);
     hideSyncOverlay();
     if(pushOk){
-      showToast('✓ Synced — app and Sheet now match' + (addedLocally > 0 ? ' (' + addedLocally + ' record' + (addedLocally===1?'':'s') + ' pulled in)' : ''));
+      showToast('✓ Synced — everything now matches' + (addedLocally > 0 ? ' (' + addedLocally + ' record' + (addedLocally===1?'':'s') + ' pulled in)' : ''));
     } else {
-      showToast('Pulled missing data locally, but couldn\u2019t push back to the Sheet — try again shortly');
+      showToast('Pulled missing data locally, but couldn\u2019t push it back to the server — try again shortly');
     }
   }catch(err){
     hideSyncOverlay();
@@ -2192,17 +2227,36 @@ async function syncReconcile(){
 // until BOTH finish — otherwise whichever resolves first would prematurely "unfreeze"
 // the screen while the other is still genuinely in flight.
 var syncOverlayRefCount = 0;
+var syncOverlayMessageTimer = null;
+var RALLY_MESSAGES = [
+  'Serving up your update…',
+  'Rallying with the server…',
+  'Keeping the ball in play…',
+  'Returning your shot…',
+  'Lining up the next point…',
+  'Smashing it through…',
+  'Setting up the next serve…',
+  'Chasing down the ball…'
+];
 function showSyncOverlay(text){
   syncOverlayRefCount++;
   if(!els.syncOverlay) return;
-  els.syncOverlayText.textContent = text || 'Saving changes…';
+  els.syncOverlayText.textContent = text || RALLY_MESSAGES[0];
   els.syncOverlay.classList.add('show');
+  if(!syncOverlayMessageTimer){
+    var i = 0;
+    syncOverlayMessageTimer = setInterval(function(){
+      i = (i + 1) % RALLY_MESSAGES.length;
+      els.syncOverlayText.textContent = RALLY_MESSAGES[i];
+    }, 1800);
+  }
 }
 function hideSyncOverlay(){
   syncOverlayRefCount = Math.max(0, syncOverlayRefCount - 1);
   if(!els.syncOverlay) return;
   if(syncOverlayRefCount === 0){
     els.syncOverlay.classList.remove('show');
+    if(syncOverlayMessageTimer){ clearInterval(syncOverlayMessageTimer); syncOverlayMessageTimer = null; }
   }
 }
 /** Call right after any create/edit/delete of a player, match, or payment.
@@ -2210,11 +2264,11 @@ function hideSyncOverlay(){
     spinner until it's done, then shows a confirmation toast either way. */
 async function syncAfterChange(){
   if(!syncConfigured()) return;
-  showSyncOverlay('Saving changes to Google Sheet…');
+  showSyncOverlay();
   var ok = await syncPush(true);
   hideSyncOverlay();
   if(ok){
-    showToast('✓ Changes saved to Google Sheet');
+    showToast('✓ Changes saved');
   } else {
     showToast('Saved locally — cloud sync failed, will retry on the next change');
   }
@@ -2224,7 +2278,7 @@ async function syncAfterChange(){
     reading data is not an admin action. Silently keeps local data if it fails. */
 async function autoPullOnLaunch(){
   if(!syncConfigured()){ renderSheetStatusBar(); return; }
-  showSyncOverlay('Loading latest data…');
+  showSyncOverlay('Fetching the latest score…');
   try{
     var data = await syncFetchRemote();
     if(data && data.ok){
@@ -2234,15 +2288,15 @@ async function autoPullOnLaunch(){
         subscriptions: Array.isArray(data.subscriptions) ? data.subscriptions : []
       };
       renderAll();
-      setSyncStatus('Loaded latest data from Sheet at ' + new Date().toLocaleTimeString() + '.', 'ok');
+      setSyncStatus('Loaded latest data at ' + new Date().toLocaleTimeString() + '.', 'ok');
       updateSyncMeta({ sheetUpdatedIso: data.lastUpdated, retrieved: true });
     } else {
-      setSyncStatus('Could not load from Sheet: ' + (data && data.error ? data.error : 'unexpected response') + ' — showing locally cached data.', 'err');
+      setSyncStatus('Could not load data: ' + (data && data.error ? data.error : 'unexpected response') + ' — showing locally cached data.', 'err');
       syncLastAttemptFailed = true;
       renderSheetStatusBar();
     }
   }catch(err){
-    setSyncStatus('Could not reach Sheet: ' + describeNetworkError(err) + ' — showing locally cached data.', 'err');
+    setSyncStatus('Could not reach the server: ' + describeNetworkError(err) + ' — showing locally cached data.', 'err');
     syncLastAttemptFailed = true;
     renderSheetStatusBar();
   }
@@ -2384,7 +2438,7 @@ function init(){
   if(syncConfigured()){
     setSyncStatus('Connected. Use "Test connection" to verify it still works.', 'idle');
   } else {
-    setSyncStatus('Not connected to a Google Sheet.', 'err');
+    setSyncStatus('Not connected.', 'err');
   }
   renderSheetStatusBar();
   setInterval(renderSheetStatusBar, 30000); // keep the "X ago" text fresh without re-fetching
@@ -2541,6 +2595,16 @@ if(document.readyState === 'loading'){
 } else {
   init();
 }
+
+/* Safety net alongside the freeze-and-confirm overlay: if a save is somehow
+   still in flight when the person tries to close or refresh the tab, warn
+   them so a last-second change doesn't quietly vanish. */
+window.addEventListener('beforeunload', function(e){
+  if(syncOverlayRefCount > 0 || currentPushPromise){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 </script>
 </body>
 </html>
